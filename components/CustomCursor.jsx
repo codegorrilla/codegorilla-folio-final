@@ -26,12 +26,25 @@ export default function CustomCursor() {
     const handleMouseOver = (e) => {
       // Check if the target is a link, button, or has class 'hover-trigger'
       const target = e.target.closest("a, button, .hover-trigger");
+      const lgTarget = e.target.closest(".lg-text-trigger");
+      const isRevealZone = e.target.closest(".reveal-zone");
 
-      if (target) {
+      if (isRevealZone) {
+        setIsHovering(true);
+        gsap.to(cursor, { scale: 0, duration: 0.3 });
+      } else if (target) {
         setIsHovering(true);
         // Animate Cursor State: Grow & Change Color
         gsap.to(cursor, {
           scale: 3.5,
+          backgroundColor: "white",
+          mixBlendMode: "difference", // Cool negative effect
+          duration: 0.3,
+        });
+      } else if (lgTarget) {
+        setIsHovering(true);
+        gsap.to(cursor, {
+          scale: 8,
           backgroundColor: "white",
           mixBlendMode: "difference", // Cool negative effect
           duration: 0.3,
