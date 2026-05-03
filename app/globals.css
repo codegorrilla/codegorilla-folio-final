@@ -1,26 +1,35 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* custom font-family */
+  --font-main: var(--font-satoshi);
+  --font-accent: var(--font-erica);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  /* Custom color palette */
+  --color-brand-blue: #2204ba;
+  --color-brand-orange: #f0493a;
+  --color-brand-yellow: #ffbf00;
+  --color-brand-dark: #242529;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-main);
+  font-weight: 400;
+}
+
+/* Sticky cards */
+.sticky-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: var(--after-opacity, 0);
+  transition: opacity 0.1s ease;
+  pointer-events: none;
+  z-index: 2;
 }
