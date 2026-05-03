@@ -15,7 +15,7 @@ const Home = () => {
       <Header />
       <ReactLenis root />
       <section className="w-full min-h-screen flex flex-col justify-center items-center bg-brand-blue">
-        landing
+        <div className="text-[4rem] txt-white hover-trigger">Hello there</div>
       </section>
       <StickyCards />
       <footer className="w-full min-h-134.5">footer</footer>

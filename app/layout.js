@@ -1,5 +1,6 @@
 import localFont from "next/font/local";
 import { Erica_One } from "next/font/google";
+import CustomCursor from "@/components/CustomCursor";
 
 const ericaOne = Erica_One({
   weight: ["400"], // Must specify weights for non-variable fonts
@@ -28,7 +29,10 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${satoshiVariable.variable} ${ericaOne.variable}  h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <CustomCursor />
+        {children}
+      </body>
     </html>
   );
 }

@@ -15,8 +15,16 @@
 }
 
 body {
+  cursor: none;
   font-family: var(--font-main);
   font-weight: 400;
+}
+
+a,
+button,
+[role="button"],
+[role="link"] {
+  cursor: none;
 }
 
 /* Sticky cards */

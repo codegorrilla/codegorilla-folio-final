@@ -1,10 +1,11 @@
+// components/StickyCards.jsx
 "use client";
 import React, { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import AboutPage from "@/app/pages/AboutPage";
-import WorkPage from "@/app/pages/WorkPage";
+import AboutPage from "@/app/pages/about/page";
+import WorkPage from "@/app/pages/work/page";
 
 gsap.registerPlugin(ScrollTrigger);
 
