@@ -36,7 +36,7 @@ export default function CustomCursor() {
         setIsHovering(true);
         // Animate Cursor State: Grow & Change Color
         gsap.to(cursor, {
-          scale: 3.5,
+          scale: 2,
           backgroundColor: "white",
           mixBlendMode: "difference", // Cool negative effect
           duration: 0.3,

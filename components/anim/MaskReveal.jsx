@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { Gorrilla } from "./Gorrilla";
 
 export const MaskReveal = () => {
   const container = useRef(null);
@@ -69,6 +70,8 @@ export const MaskReveal = () => {
           that works!
         </p>
       </div>
+
+      <Gorrilla />
     </div>
   );
 };

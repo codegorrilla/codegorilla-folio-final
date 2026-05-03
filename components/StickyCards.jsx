@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import AboutPage from "@/app/pages/about/page";
 import WorkPage from "@/app/pages/work/page";
+import { MaskReveal } from "./anim/MaskReveal";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -57,6 +58,12 @@ const StickyCards = () => {
 
   return (
     <section className="w-full h-full relative bg-white" ref={container}>
+      <section className="w-full min-h-screen relative flex flex-col justify-center items-center bg-brand-blue pt-4 sticky-card">
+        <article className="flex flex-col justify-center items-center font-accent text-white text-center uppercase lg-text-trigger leading-[0.75]">
+          <div className="m-0 p-0 text-[clamp(3rem,21vw,350px)]">code</div>
+          <MaskReveal />
+        </article>
+      </section>
       <AboutPage className="w-full min-h-screen flex gap-3 p-20 relative bg-brand-dark text-white will-change-transform sticky-card">
         About
       </AboutPage>

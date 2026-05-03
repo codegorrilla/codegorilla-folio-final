@@ -15,6 +15,7 @@
 }
 
 body {
+  overflow-x: hidden;
   font-family: var(--font-main);
   font-weight: 400;
 }
@@ -38,14 +39,29 @@ body {
   z-index: 2;
 }
 
+.pin-spacer {
+  background: white;
+}
+
 /* Mouse Mask Utility */
 .mouse-mask {
   mask-size: calc(var(--mask-size, 300) * 1px) calc(var(--mask-size, 300) * 1px);
-  -webkit-mask-size: calc(var(--mask-size, 300) * 1px) calc(var(--mask-size, 300) * 1px);
+  -webkit-mask-size: calc(var(--mask-size, 300) * 1px)
+    calc(var(--mask-size, 300) * 1px);
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
-  mask-image: radial-gradient(circle closest-side, black 100%, transparent 100%);
-  -webkit-mask-image: radial-gradient(circle closest-side, black 100%, transparent 100%);
-  mask-position: calc(var(--x) * 1px - var(--mask-size, 300) * 1px / 2) calc(var(--y) * 1px - var(--mask-size, 300) * 1px / 2);
-  -webkit-mask-position: calc(var(--x) * 1px - var(--mask-size, 300) * 1px / 2) calc(var(--y) * 1px - var(--mask-size, 300) * 1px / 2);
+  mask-image: radial-gradient(
+    circle closest-side,
+    black 100%,
+    transparent 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    circle closest-side,
+    black 100%,
+    transparent 100%
+  );
+  mask-position: calc(var(--x) * 1px - var(--mask-size, 300) * 1px / 2)
+    calc(var(--y) * 1px - var(--mask-size, 300) * 1px / 2);
+  -webkit-mask-position: calc(var(--x) * 1px - var(--mask-size, 300) * 1px / 2)
+    calc(var(--y) * 1px - var(--mask-size, 300) * 1px / 2);
 }

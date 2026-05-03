@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${satoshiVariable.variable} ${ericaOne.variable}  h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-brand-orange">
         <CustomCursor />
         {children}
       </body>
