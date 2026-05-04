@@ -39,10 +39,6 @@ body {
   z-index: 2;
 }
 
-.pin-spacer {
-  background: white;
-}
-
 /* Mouse Mask Utility */
 .mouse-mask {
   mask-size: calc(var(--mask-size, 300) * 1px) calc(var(--mask-size, 300) * 1px);

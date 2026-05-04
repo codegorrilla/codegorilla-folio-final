@@ -1,17 +1,35 @@
 "use client";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Gorrilla } from "./Gorrilla";
+import { TextScaleUp } from "../TextScaleUp";
 
 export const MaskReveal = () => {
   const container = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const size = 300; // Mask diameter
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 992px)");
+    
+    // Set initial value
+    setIsDesktop(mediaQuery.matches);
+    
+    // Handle window resize
+    const handler = (e) => setIsDesktop(e.matches);
+    mediaQuery.addEventListener("change", handler);
+    
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
 
   useGSAP(
     () => {
+      if (!isDesktop) return;
+
       const el = container.current;
+      if (!el) return;
 
       // 1. Setup "quickTo" for high-performance variable updates
       // This replaces the 'animate' prop.
@@ -44,7 +62,7 @@ export const MaskReveal = () => {
       window.addEventListener("mousemove", handleMouseMove);
       return () => window.removeEventListener("mousemove", handleMouseMove);
     },
-    { scope: container },
+    { scope: container, dependencies: [isDesktop] },
   );
 
   return (
@@ -52,24 +70,25 @@ export const MaskReveal = () => {
       {/* LAYER 2: The Body (Background) Content (Placed First so it's behind) */}
       <div className="col-start-1 row-start-1 w-full h-full flex justify-center items-center text-[#afa18f] z-0">
         <p className="text-[clamp(3rem,21vw,300px)] text-white m-0 leading-none">
-          gorrilla
+          <TextScaleUp>gorrilla</TextScaleUp>
         </p>
       </div>
 
-      {/* LAYER 1: The Masked (Revealed) Content (Placed Second so it's on top) */}
-      <div
-        className="absolute inset-[-100vh] z-10  bg-brand-orange mouse-mask flex justify-center items-center pointer-events-none"
-        ref={container}
-        style={{ "--x": 0, "--y": 0, "--mask-size": 0 }} // Initialize to size 0
-      >
-        <p
-          className="text-[clamp(3rem,21vw,300px)] text-black whitespace-nowrap m-0 leading-none pointer-events-auto"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+      {isDesktop && (
+        <div
+          className="absolute inset-[-100vh] z-10 bg-brand-orange mouse-mask flex justify-center items-center pointer-events-none"
+          ref={container}
+          style={{ "--x": 0, "--y": 0, "--mask-size": 0 }} // Initialize to size 0
         >
-          that works!
-        </p>
-      </div>
+          <p
+            className="text-[clamp(3rem,21vw,300px)] text-black whitespace-nowrap m-0 leading-none pointer-events-auto"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            that works!
+          </p>
+        </div>
+      )}
 
       <Gorrilla />
     </div>

@@ -1,11 +1,12 @@
 "use client";
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import gorrillaFace from "../../assets/monkey/monkey-face.png";
 import gorrillaLeftEye from "../../assets/monkey/monkey-left-eye.png";
 import gorrillaRightEye from "../../assets/monkey/monkey-right-eye.png";
+import GorrillaMouth from "./GorrillaMouth";
 
 const gorrillaFig = {
   gorrillaFace,
@@ -14,12 +15,47 @@ const gorrillaFig = {
 };
 
 //gorilla face animation
-
 export const Gorrilla = () => {
   const faceTrackerRef = useRef(null);
 
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 992px)");
+
+    // Set initial value
+    setIsDesktop(mediaQuery.matches);
+
+    // Handle window resize
+    const handler = (e) => setIsDesktop(e.matches);
+    mediaQuery.addEventListener("change", handler);
+
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
   useGSAP(
     () => {
+      //scaling up the face on first load
+      const faceEl = faceTrackerRef.current.querySelector(".face");
+      gsap.fromTo(
+        faceEl,
+        { scale: 0 },
+        {
+          scale: 1,
+          duration: 1.3,
+          delay: 0.2,
+          ease: "elastic.out(1, 0.4)",
+          transformOrigin: "center",
+        },
+      );
+    },
+    { scope: faceTrackerRef },
+  );
+
+  useGSAP(
+    () => {
+      if (!isDesktop) return;
+
       const wrapper = document.querySelector(".tracker");
       const gorrillaFace = document.querySelector(".face");
       const gorrillaEyes = document.querySelector(".eyes");
@@ -94,12 +130,12 @@ export const Gorrilla = () => {
         window.removeEventListener("mouseleave", figLeaveEvent);
       };
     },
-    { scope: faceTrackerRef },
+    { scope: faceTrackerRef, dependencies: [isDesktop] },
   );
 
   return (
     <div
-      className="w-full h-full absolute inset-y-[-120px] flex flex-col justify-center items-center text-center tracker z-0 pointer-events-none"
+      className="w-full h-full absolute inset-y-[-280px] lg:inset-y-[-120px] transform scale-[0.6] sm:scale-[0.7] md:scale-[0.8] lg:scale-100 flex flex-col justify-center items-center text-center tracker z-0 pointer-events-none origin-bottom landscape:origin-center"
       ref={faceTrackerRef}
     >
       {/* Responsive wrapper that matches the exact dimensions of the scaling face */}
@@ -126,6 +162,7 @@ export const Gorrilla = () => {
             alt="right-eye"
           />
         </div>
+        <GorrillaMouth />
       </div>
     </div>
   );
