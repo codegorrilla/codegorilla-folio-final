@@ -43,7 +43,7 @@ export const Gorrilla = () => {
         {
           scale: 1,
           duration: 1.3,
-          delay: 0.2,
+          delay: 3.0,
           ease: "elastic.out(1, 0.4)",
           transformOrigin: "center",
         },
