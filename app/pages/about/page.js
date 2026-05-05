@@ -1,8 +1,17 @@
 // app/pages/AboutPage.jsx
-import React from "react";
+"use client";
+import React, { useRef } from "react";
+import Header from "@/components/Header";
 
 const AboutPage = ({ children, ...props }) => {
-  return <section {...props}>{children}</section>;
+  const aboutContainer = useRef(null);
+
+  return (
+    <section ref={aboutContainer} {...props}>
+      <Header variant="about" triggerRef={aboutContainer} />
+      {children}
+    </section>
+  );
 };
 
 export default AboutPage;
