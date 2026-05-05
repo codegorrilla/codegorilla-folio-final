@@ -19,7 +19,7 @@ const Preloader = ({ onComplete }) => {
       const tl = gsap.timeline({
         onComplete: () => {
           setIsMounted(false);
-          if (onComplete) onComplete();
+          onComplete?.(); //if (onComplete) onComplete();
         },
       });
 
