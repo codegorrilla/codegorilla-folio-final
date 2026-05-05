@@ -59,12 +59,12 @@ const StickyCards = () => {
 
   return (
     <section className="w-full h-full relative bg-white" ref={container}>
-      <HeroPage className="w-full min-h-screen rounded-t-full relative flex flex-col justify-center items-center bg-brand-blue pt-4 overflow-hidden sticky-card" />
+      <HeroPage className="w-full min-h-screen rounded-t-2xl relative flex flex-col justify-center items-center bg-brand-blue pt-4 overflow-hidden sticky-card" />
 
-      <AboutPage className="w-full min-h-screen rounded-t-full flex gap-3 p-20 relative bg-brand-dark text-white will-change-transform sticky-card">
+      <AboutPage className="w-full min-h-screen rounded-t-2xl flex gap-3 p-20 relative bg-brand-dark text-white will-change-transform sticky-card">
         About
       </AboutPage>
-      <WorkPage className="w-full min-h-screen rounded-t-full flex gap-3 p-20 relative bg-brand-yellow text-white will-change-transform sticky-card">
+      <WorkPage className="w-full min-h-screen rounded-t-2xl flex gap-3 p-20 relative bg-brand-yellow text-white will-change-transform sticky-card">
         Work
       </WorkPage>
     </section>
