@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   /* custom font-family */
@@ -60,4 +61,26 @@ body {
     calc(var(--y) * 1px - var(--mask-size, 300) * 1px / 2);
   -webkit-mask-position: calc(var(--x) * 1px - var(--mask-size, 300) * 1px / 2)
     calc(var(--y) * 1px - var(--mask-size, 300) * 1px / 2);
+}
+
+/* ── ScrambleHoverEffect grid blocks ─────────────────────────────────────── */
+.scr-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, "Space Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: transparent;
+  background-color: transparent;
+  border-radius: 3px;
+  transition:
+    color 0.12s ease,
+    background-color 0.12s ease;
+}
+
+.scr-block.scr-active {
+  color: var(--color-brand-yellow); /* brand-yellow */
+  background-color: rgba(0, 0, 0, 1);
 }

@@ -5,6 +5,7 @@ import { ReactLenis, useLenis } from "lenis/react";
 
 import StickyCards from "@/components/StickyCards";
 import Preloader from "@/components/anim/Preloader";
+import FloatingDock from "@/components/ui/FloatingDock";
 
 const Home = () => {
   const lenis = useLenis((lenis) => {
@@ -17,6 +18,7 @@ const Home = () => {
       <Preloader />
       <ReactLenis root />
       <StickyCards />
+      <FloatingDock />
       <footer className="w-full min-h-134.5">footer</footer>
     </>
   );

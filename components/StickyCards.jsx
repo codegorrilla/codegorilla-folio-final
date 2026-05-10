@@ -8,11 +8,14 @@ import { useGSAP } from "@gsap/react";
 import HeroPage from "@/app/pages/hero/page";
 import AboutPage from "@/app/pages/about/page";
 import WorkPage from "@/app/pages/work/page";
+import { TextGradientFill } from "@/components/anim/TextGradientFill";
+import { useTheme } from "@/hooks/useTheme";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const StickyCards = () => {
   const container = useRef(null);
+  const { theme } = useTheme();
 
   //Sticky card animation
   useGSAP(
@@ -20,7 +23,7 @@ const StickyCards = () => {
       const stickyCards = document.querySelectorAll(".sticky-card");
 
       stickyCards.forEach((card, index) => {
-        // this pins all the cards except the last one
+        // Pin all cards except the last one
         if (index < stickyCards.length - 1) {
           ScrollTrigger.create({
             trigger: card,
@@ -61,9 +64,26 @@ const StickyCards = () => {
     <section className="w-full h-full relative bg-white" ref={container}>
       <HeroPage className="w-full min-h-screen rounded-t-2xl relative flex flex-col justify-center items-center bg-brand-blue pt-4 overflow-hidden sticky-card" />
 
-      <AboutPage className="w-full min-h-screen rounded-t-2xl flex gap-3 p-20 relative bg-brand-dark text-white will-change-transform sticky-card">
-        About
+      <AboutPage
+        className={`w-full min-h-screen rounded-t-2xl flex gap-3 p-20 relative transition-colors duration-500 will-change-transform sticky-card ${
+          theme === "light"
+            ? "bg-white text-brand-dark"
+            : "bg-brand-dark text-white"
+        }`}
+      >
+        <TextGradientFill />
       </AboutPage>
+
+      {/*
+        Scroll spacer — sits between About and Work in the DOM.
+        Because About is pinned with pinSpacing:false, this spacer is visually
+        covered by the pinned About card. Its height extends the scroll distance
+        from About hitting the top → Work hitting the top, giving the text-fill
+        animation enough room to complete before Work slides in.
+        Adjust height to control fill speed (taller = slower fill).
+      */}
+      <div aria-hidden="true" style={{ height: "3000px" }} />
+
       <WorkPage className="w-full min-h-screen rounded-t-2xl flex gap-3 p-20 relative bg-brand-yellow text-white will-change-transform sticky-card">
         Work
       </WorkPage>

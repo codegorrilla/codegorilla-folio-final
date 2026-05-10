@@ -1,13 +1,13 @@
 // app/pages/AboutPage.jsx
 "use client";
 import React, { useRef } from "react";
-import Header from "@/components/Header";
+import Header from "@/components/anim/Header";
 
 const AboutPage = ({ children, ...props }) => {
   const aboutContainer = useRef(null);
 
   return (
-    <section ref={aboutContainer} {...props}>
+    <section id="about-section" ref={aboutContainer} {...props}>
       <Header variant="about" triggerRef={aboutContainer} />
       {children}
     </section>

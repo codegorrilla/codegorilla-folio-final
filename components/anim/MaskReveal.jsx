@@ -2,8 +2,8 @@
 import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { Gorrilla } from "./Gorrilla";
-import { TextScaleUp } from "../TextScaleUp";
+import { Gorrilla } from "@/components/anim/Gorrilla";
+import { TextScaleUp } from "@/components/anim/TextScaleUp";
 
 export const MaskReveal = () => {
   const container = useRef(null);
@@ -13,14 +13,14 @@ export const MaskReveal = () => {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 992px)");
-    
+
     // Set initial value
     setIsDesktop(mediaQuery.matches);
-    
+
     // Handle window resize
     const handler = (e) => setIsDesktop(e.matches);
     mediaQuery.addEventListener("change", handler);
-    
+
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 

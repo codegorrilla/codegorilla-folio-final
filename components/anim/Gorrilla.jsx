@@ -3,10 +3,10 @@ import React, { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import gorrillaFace from "../../assets/monkey/monkey-face.png";
-import gorrillaLeftEye from "../../assets/monkey/monkey-left-eye.png";
-import gorrillaRightEye from "../../assets/monkey/monkey-right-eye.png";
-import GorrillaMouth from "./GorrillaMouth";
+import gorrillaFace from "@/assets/monkey/monkey-face.png";
+import gorrillaLeftEye from "@/assets/monkey/monkey-left-eye.png";
+import gorrillaRightEye from "@/assets/monkey/monkey-right-eye.png";
+import GorrillaMouth from "@/components/anim/GorrillaMouth";
 
 const gorrillaFig = {
   gorrillaFace,

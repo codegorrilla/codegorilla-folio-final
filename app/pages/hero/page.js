@@ -1,8 +1,8 @@
 import React, { useRef } from "react";
 import { MaskReveal } from "@/components/anim/MaskReveal";
 import { VerticalMarquee } from "@/components/anim/VerticalMarquee";
-import { TextScaleUp } from "@/components/TextScaleUp";
-import Header from "@/components/Header";
+import { TextScaleUp } from "@/components/anim/TextScaleUp";
+import Header from "@/components/anim/Header";
 
 const HeroPage = ({ ...props }) => {
   const heroContainer = useRef(null);

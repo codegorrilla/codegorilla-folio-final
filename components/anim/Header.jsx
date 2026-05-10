@@ -71,9 +71,12 @@ const Header = ({ variant = "hero", triggerRef }) => {
         // Delay SplitText until after the preloader Flip finishes to prevent bounding box shifts
         gsap.delayedCall(3.75, initHoverEffect);
       } else if (variant === "about") {
-        // Slide in/out from right based on scroll direction
+        // Slide in/out from right based on scroll direction.
+        // endTrigger is the Work .sticky-card (not nextElementSibling which is
+        // the 3000px scroll spacer) so the logo stays visible for the full
+        // text-fill animation and only hides when Work actually arrives.
         const parentSection = headerRef.current.parentElement;
-        const nextSection = parentSection ? parentSection.nextElementSibling : null;
+        const workCard = document.querySelector(".sticky-card:last-child");
 
         gsap.fromTo(
           headerRef.current,
@@ -85,10 +88,10 @@ const Header = ({ variant = "hero", triggerRef }) => {
             ease: "power3.out",
             scrollTrigger: {
               trigger: parentSection,
-              start: "top 60%", // Triggers when About section enters 60% of viewport
-              endTrigger: nextSection || parentSection,
-              end: nextSection ? "top 50%" : "bottom 20%", // Reverses when the next section covers half the viewport
-              toggleActions: "play reverse play reverse", 
+              start: "top 60%",
+              endTrigger: workCard || parentSection,
+              end: "top 50%",
+              toggleActions: "play reverse play reverse",
             },
           },
         );

@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useState } from "react";
 import gsap from "gsap";
-import { Flip } from "gsap/all";
+import { Flip } from "gsap/Flip";
 import { useGSAP } from "@gsap/react";
 
 gsap.registerPlugin(Flip);
