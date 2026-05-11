@@ -1,4 +1,3 @@
-// app/pages/AboutPage.jsx
 "use client";
 import React, { useRef } from "react";
 import Header from "@/components/anim/Header";
