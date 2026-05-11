@@ -1,16 +1,11 @@
-// components/ui/SocialLinks.jsx
 import SvgIcon from "./SvgIcon";
+import { useTheme } from "@/hooks/useTheme";
 
 /**
  * SOCIALS config
  * ─────────────────────────────────────────────────────────────────────────────
  * SVGs served from /public/social_icons/ (Simple Icons, monochrome white).
  * Download from: https://simpleicons.org
- *
- * Files needed in /public/social_icons/:
- *   github.svg · behance.svg · instagram.svg · discord.svg · gmail.svg
- *
- * Update href values with your actual profile URLs / email.
  */
 const SOCIALS = [
   {
@@ -58,6 +53,8 @@ const SOCIALS = [
 ];
 
 const SocialLinks = () => {
+  const { theme } = useTheme();
+
   return (
     <ul className="flex items-center gap-5" aria-label="Social links">
       {SOCIALS.map(({ key, label, href, src, color }) => (
@@ -80,12 +77,12 @@ const SocialLinks = () => {
             <SvgIcon
               src={src}
               size={28}
-              className="
+              className={`
                 block
-                brightness-0 invert
                 group-hover:scale-110
-                transition-transform duration-300 ease-out
-              "
+                transition-all duration-300 ease-out
+                ${theme === "light" ? "brightness-0" : "brightness-0 invert"}
+              `}
             />
           </a>
         </li>

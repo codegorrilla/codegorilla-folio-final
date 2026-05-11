@@ -184,10 +184,11 @@ export const ScrambleHoverEffect = () => {
       el._scrCleanup = cleanup;
     });
 
+    const currentEl = containerRef.current;
     return () => {
       cancelAnimationFrame(id);
-      if (containerRef.current?._scrCleanup) {
-        containerRef.current._scrCleanup();
+      if (currentEl?._scrCleanup) {
+        currentEl._scrCleanup();
       }
     };
   }, []);

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import { useEffect } from "react";
 import "lenis/dist/lenis.css";
 import { ReactLenis, useLenis } from "lenis/react";
 
@@ -8,15 +8,37 @@ import Preloader from "@/components/anim/Preloader";
 import FloatingDock from "@/components/ui/FloatingDock";
 
 const Home = () => {
-  const lenis = useLenis((lenis) => {
-    //called every scroll
-    // console.log(lenis);
-  });
+  const lenis = useLenis();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.history.scrollRestoration = "manual";
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (lenis) {
+      // Force scroll to top immediately and on next frame
+      lenis.scrollTo(0, { immediate: true });
+      
+      const timer = setTimeout(() => {
+        lenis.scrollTo(0, { immediate: true });
+        window.scrollTo(0, 0);
+      }, 50);
+
+      return () => clearTimeout(timer);
+    }
+  }, [lenis]);
 
   return (
     <>
       <Preloader />
-      <ReactLenis root />
+      <ReactLenis root options={{ 
+        lerp: 0.1, 
+        duration: 1.5, 
+        syncTouch: true // Important for mobile scroll synchronization
+      }} />
       <StickyCards />
       <FloatingDock />
       <footer className="w-full min-h-134.5">footer</footer>

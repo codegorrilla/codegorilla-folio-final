@@ -109,7 +109,7 @@ export default function CustomCursor() {
       {/* Cursor dot — hidden by default, shown only on desktop via GSAP */}
       <div
         ref={dotRef}
-        className="fixed top-0 left-0 w-8 h-8 bg-brand-orange rounded-full pointer-events-none z-9999 -translate-x-1/2 -translate-y-1/2 opacity-0"
+        className="hidden lg:block fixed top-0 left-0 w-8 h-8 bg-brand-orange rounded-full pointer-events-none z-9999 -translate-x-1/2 -translate-y-1/2 opacity-0"
       />
 
       {/*
@@ -120,6 +120,7 @@ export default function CustomCursor() {
       <div
         ref={labelRef}
         className="
+          hidden lg:block
           fixed top-0 left-0 pointer-events-none z-9999 opacity-0
           px-4 py-1.5
           rounded-full

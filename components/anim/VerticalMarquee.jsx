@@ -14,14 +14,19 @@ export const VerticalMarquee = ({ text = "code.gorrilla", speed = 10 }) => {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 992px)");
 
-    // Set initial value
-    setIsVisible(mediaQuery.matches);
+    // Set initial value (deferred to avoid cascading render warning)
+    const timeoutId = setTimeout(() => {
+      setIsVisible(mediaQuery.matches);
+    }, 0);
 
     // Handle window resize
     const handler = (e) => setIsVisible(e.matches);
     mediaQuery.addEventListener("change", handler);
 
-    return () => mediaQuery.removeEventListener("change", handler);
+    return () => {
+      mediaQuery.removeEventListener("change", handler);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   useGSAP(

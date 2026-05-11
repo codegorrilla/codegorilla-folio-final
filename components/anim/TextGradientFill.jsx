@@ -216,7 +216,7 @@ export const TextGradientFill = () => {
   return (
     <div
       ref={containerRef}
-      className="relative w-full font-main font-medium text-[4rem] leading-[1.15] select-none"
+      className="relative w-full font-main font-medium text-[2rem] md:text-[3rem] lg:text-[4rem] leading-[1.15] select-none"
     >
       {/* Above-word icons (Y-axis) — decorative, must not intercept mouse */}
       <SvgIcon
@@ -242,8 +242,8 @@ export const TextGradientFill = () => {
         className="absolute z-10 pointer-events-none"
       />
 
-      <div className="grid grid-cols-[1fr_auto] gap-x-20 items-start">
-        <div className="pt-20">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-y-16 lg:gap-x-20 items-start">
+        <div className="pt-10 lg:pt-20">
           <span className="block text-sm font-semibold tracking-[0.25em] uppercase text-brand-orange mb-10">
             About
           </span>
@@ -261,7 +261,7 @@ export const TextGradientFill = () => {
 
           <div className="pb-[60px]" data-split>
             That crossover — a decade of design instinct fused with engineering
-            — means I don't just build things that work. I build things that
+            — means I don&apos;t just build things that work. I build things that
             feel right.
           </div>
 
@@ -274,7 +274,7 @@ export const TextGradientFill = () => {
           </div>
         </div>
 
-        <div className="pt-20 w-[420px] shrink-0">
+        <div className="pt-10 lg:pt-20 w-full lg:w-[420px] shrink-0">
           <ScrambleHoverEffect />
           <Toolkit />
         </div>

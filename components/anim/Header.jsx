@@ -20,16 +20,17 @@ const Header = ({ variant = "hero", triggerRef }) => {
       let handleMouseLeave;
 
       const initHoverEffect = () => {
+        if (!logoRef.current) return;
         split = new SplitText(logoRef.current, { type: "chars" });
         gsap.set(logoRef.current, { perspective: 400 });
 
         handleMouseEnter = () => {
           gsap.to(split.chars, {
             rotationX: 360,
-            duration: 1.0, // slower
+            duration: 1.0,
             stagger: 0.04,
-            ease: "back.out(1.7)", // bouncy ease
-            overwrite: "auto", // stop any running animations
+            ease: "back.out(1.7)",
+            overwrite: "auto",
           });
         };
 
@@ -48,33 +49,47 @@ const Header = ({ variant = "hero", triggerRef }) => {
       };
 
       if (variant === "hero") {
-        // Instantly appear exactly when the preloader unmounts (at 3.7s), then initialize ScrollTrigger
-        gsap.set(headerRef.current, { 
-          opacity: 1, 
-          delay: 3.7,
-          onComplete: () => {
-            // Slide up/down when scrolling away/towards the hero section
-            gsap.to(headerRef.current, {
-              y: -100,
-              opacity: 0,
-              duration: 0.6,
-              ease: "power3.inOut",
-              scrollTrigger: {
-                trigger: document.body,
-                start: "150px top", // Triggers when scrolled 150px down from the top
-                toggleActions: "play none none reverse",
-              },
-            });
-          }
+        const setupScrollTrigger = () => {
+          gsap.to(headerRef.current, {
+            y: -100,
+            opacity: 0,
+            duration: 0.6,
+            ease: "power3.inOut",
+            scrollTrigger: {
+              trigger: document.body,
+              start: "150px top",
+              toggleActions: "play none none reverse",
+            },
+          });
+        };
+
+        const mm = gsap.matchMedia();
+
+        mm.add("(min-width: 992px)", () => {
+          gsap.set(headerRef.current, {
+            opacity: 1,
+            delay: 3.7,
+            onComplete: setupScrollTrigger,
+          });
         });
 
-        // Delay SplitText until after the preloader Flip finishes to prevent bounding box shifts
+        mm.add("(max-width: 991px)", () => {
+          gsap.fromTo(
+            headerRef.current,
+            { opacity: 0 },
+            {
+              opacity: 1,
+              delay: 3.0,
+              duration: 1.2,
+              ease: "power2.out",
+              onComplete: setupScrollTrigger,
+            },
+          );
+        });
+
+        // Delay SplitText until after the preloader finishes to prevent bounding box shifts
         gsap.delayedCall(3.75, initHoverEffect);
       } else if (variant === "about") {
-        // Slide in/out from right based on scroll direction.
-        // endTrigger is the Work .sticky-card (not nextElementSibling which is
-        // the 3000px scroll spacer) so the logo stays visible for the full
-        // text-fill animation and only hides when Work actually arrives.
         const parentSection = headerRef.current.parentElement;
         const workCard = document.querySelector(".sticky-card:last-child");
 
@@ -96,15 +111,15 @@ const Header = ({ variant = "hero", triggerRef }) => {
           },
         );
 
-        // Initialize hover effect immediately
         initHoverEffect();
       }
 
       return () => {
-        if (handleMouseEnter) {
+        if (handleMouseEnter && logoRef.current) {
           logoRef.current.removeEventListener("mouseenter", handleMouseEnter);
           logoRef.current.removeEventListener("mouseleave", handleMouseLeave);
         }
+        gsap.killTweensOf(initHoverEffect);
         if (split) split.revert();
       };
     },

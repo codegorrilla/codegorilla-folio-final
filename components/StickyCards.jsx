@@ -17,55 +17,60 @@ const StickyCards = () => {
   const container = useRef(null);
   const { theme } = useTheme();
 
-  //Sticky card animation
   useGSAP(
     () => {
-      const stickyCards = document.querySelectorAll(".sticky-card");
+      const mm = gsap.matchMedia();
 
-      stickyCards.forEach((card, index) => {
-        // Pin all cards except the last one
-        if (index < stickyCards.length - 1) {
-          ScrollTrigger.create({
-            trigger: card,
-            start: "top top",
-            endTrigger: stickyCards[stickyCards.length - 1],
-            end: "top top",
-            pin: true,
-            pinSpacing: false,
-          });
-        }
+      mm.add("(min-width: 992px)", () => {
+        const stickyCards = document.querySelectorAll(".sticky-card");
 
-        // this animates the cards i.e. scaling down and rotating
-        if (index < stickyCards.length - 1) {
-          ScrollTrigger.create({
-            trigger: stickyCards[index + 1],
-            start: "top bottom",
-            end: "top top",
-            onUpdate: (self) => {
-              const progress = self.progress;
-              const scale = 1 - progress * 0.25;
-              const rotation = (index % 2 === 0 ? 5 : -5) * progress;
-              const afterOpacity = progress;
+        stickyCards.forEach((card, index) => {
+          // Pin all cards except the last one
+          if (index < stickyCards.length - 1) {
+            ScrollTrigger.create({
+              trigger: card,
+              start: "top top",
+              endTrigger: stickyCards[stickyCards.length - 1],
+              end: "top top",
+              pin: true,
+              pinSpacing: false,
+            });
+          }
 
-              gsap.set(card, {
-                scale: scale,
-                rotation: rotation,
-                "--after-opacity": afterOpacity,
-              });
-            },
-          });
-        }
+          // this animates the cards i.e. scaling down and rotating
+          if (index < stickyCards.length - 1) {
+            ScrollTrigger.create({
+              trigger: stickyCards[index + 1],
+              start: "top bottom",
+              end: "top top",
+              onUpdate: (self) => {
+                const progress = self.progress;
+                const scale = 1 - progress * 0.25;
+                const rotation = (index % 2 === 0 ? 5 : -5) * progress;
+                const afterOpacity = progress;
+
+                gsap.set(card, {
+                  scale: scale,
+                  rotation: rotation,
+                  "--after-opacity": afterOpacity,
+                });
+              },
+            });
+          }
+        });
       });
+
+      return () => mm.revert();
     },
     { scope: container },
   );
 
   return (
     <section className="w-full h-full relative bg-white" ref={container}>
-      <HeroPage className="w-full min-h-screen rounded-t-2xl relative flex flex-col justify-center items-center bg-brand-blue pt-4 overflow-hidden sticky-card" />
+      <HeroPage className="w-full min-h-screen rounded-0 lg:rounded-t-2xl relative flex flex-col justify-center items-center bg-brand-blue pt-4 overflow-hidden sticky-card" />
 
       <AboutPage
-        className={`w-full min-h-screen rounded-t-2xl flex gap-3 p-20 relative transition-colors duration-500 will-change-transform sticky-card ${
+        className={`w-full min-h-screen rounded-0 lg:rounded-t-2xl flex gap-3 p-6 md:p-10 lg:p-20 relative transition-colors duration-500 will-change-transform sticky-card ${
           theme === "light"
             ? "bg-white text-brand-dark"
             : "bg-brand-dark text-white"
@@ -82,9 +87,9 @@ const StickyCards = () => {
         animation enough room to complete before Work slides in.
         Adjust height to control fill speed (taller = slower fill).
       */}
-      <div aria-hidden="true" style={{ height: "3000px" }} />
+      <div aria-hidden="true" className="hidden min-[992px]:block h-[3000px]" />
 
-      <WorkPage className="w-full min-h-screen rounded-t-2xl flex gap-3 p-20 relative bg-brand-yellow text-white will-change-transform sticky-card">
+      <WorkPage className="w-full min-h-screen rounded-0 lg:rounded-t-2xl flex gap-3 p-6 md:p-10 lg:p-20 relative bg-brand-yellow text-white will-change-transform sticky-card">
         Work
       </WorkPage>
     </section>

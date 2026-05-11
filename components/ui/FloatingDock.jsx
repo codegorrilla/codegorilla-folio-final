@@ -11,6 +11,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const FloatingDock = () => {
   const dockRef = useRef(null);
+  const mobileDockRef = useRef(null);
   const lenis = useLenis();
 
   // State for toggles and progress
@@ -20,38 +21,51 @@ const FloatingDock = () => {
 
   useGSAP(() => {
     const dock = dockRef.current;
-    if (!dock) return;
+    const mobileDock = mobileDockRef.current;
+    const mm = gsap.matchMedia();
 
-    // Set initial hidden/squashed state
-    gsap.set(dock, { y: 150, scaleY: 1.5, scaleX: 0.8 });
+    // Desktop: Trigger entrance at About section
+    mm.add("(min-width: 768px)", () => {
+      if (!dock) return;
+      gsap.set(dock, { y: 150, scaleY: 1.5, scaleX: 0.8 });
 
-    // Dock entrance/exit animation based on About section
-    ScrollTrigger.create({
-      trigger: "#about-section",
-      start: "top 50%", // Trigger when the top of about section hits middle of screen
-      onEnter: () => {
-        gsap.to(dock, {
-          y: 0,
-          scaleY: 1,
-          scaleX: 1,
-          duration: 1.2,
-          ease: "elastic.out(1, 0.4)",
-          overwrite: "auto",
-        });
-      },
-      onLeaveBack: () => {
-        gsap.to(dock, {
-          y: 150,
-          scaleY: 1.5,
-          scaleX: 0.8,
-          duration: 0.5,
-          ease: "power2.in",
-          overwrite: "auto",
-        });
-      },
+      ScrollTrigger.create({
+        trigger: "#about-section",
+        start: "top 50%", // Trigger when the top of about section hits middle of screen
+        onEnter: () => {
+          gsap.to(dock, {
+            y: 0,
+            scaleY: 1,
+            scaleX: 1,
+            duration: 1.2,
+            ease: "elastic.out(1, 0.4)",
+            overwrite: "auto",
+          });
+        },
+        onLeaveBack: () => {
+          gsap.to(dock, {
+            y: 150,
+            scaleY: 1.5,
+            scaleX: 0.8,
+            duration: 0.5,
+            ease: "power2.in",
+            overwrite: "auto",
+          });
+        },
+      });
     });
 
-    // Global scroll progress tracker
+    // Mobile & Tablet: Present across all sections, animating in on load
+    mm.add("(max-width: 767px)", () => {
+      if (!mobileDock) return;
+      gsap.fromTo(
+        mobileDock,
+        { y: 100, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1, ease: "power3.out", delay: 0.5 }
+      );
+    });
+
+    // Global scroll progress tracker (applies universally)
     ScrollTrigger.create({
       start: 0,
       end: "max",
@@ -59,14 +73,19 @@ const FloatingDock = () => {
         setScrollProgress(self.progress);
       },
     });
+
+    return () => mm.revert();
   });
 
   return (
-    <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-100 pointer-events-none">
+    <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-100 pointer-events-none flex flex-col items-center">
+      {/* =========================================
+          DESKTOP DOCK
+          ========================================= */}
       <div
         ref={dockRef}
         className="
-          flex items-center gap-3 px-3 py-2
+          hidden md:flex items-center gap-3 px-3 py-2
           bg-black/60 backdrop-blur-md
           border border-white/10
           rounded-full shadow-2xl
@@ -122,34 +141,58 @@ const FloatingDock = () => {
           className="w-9 h-9 flex items-center justify-center cursor-none hover-trigger text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
           aria-label={isAudioOn ? "Mute audio" : "Unmute audio"}
         >
-          {isAudioOn ? (
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="relative w-4 h-4 flex items-center justify-center">
+            {/* Audio ON Icon */}
+            <span
+              className="absolute inset-0 flex items-center justify-center transition-all duration-500"
+              style={{
+                transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+                opacity: isAudioOn ? 1 : 0,
+                transform: isAudioOn
+                  ? "translateY(0) scale(1)"
+                  : "translateY(100%) scale(0.5)",
+                pointerEvents: isAudioOn ? "auto" : "none",
+              }}
             >
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-            </svg>
-          ) : (
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              <svg
+                className="w-4 h-4 fill-none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+              </svg>
+            </span>
+
+            {/* Audio OFF Icon */}
+            <span
+              className="absolute inset-0 flex items-center justify-center transition-all duration-500"
+              style={{
+                transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+                opacity: !isAudioOn ? 1 : 0,
+                transform: !isAudioOn
+                  ? "translateY(0) scale(1)"
+                  : "translateY(-100%) scale(0.5)",
+                pointerEvents: !isAudioOn ? "auto" : "none",
+              }}
             >
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <line x1="23" y1="1" x2="1" y2="23"></line>
-            </svg>
-          )}
+              <svg
+                className="w-4 h-4 fill-none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="1" x2="1" y2="23"></line>
+              </svg>
+            </span>
+          </div>
         </button>
 
         {/* 3. GitHub Link */}
@@ -173,39 +216,65 @@ const FloatingDock = () => {
           className="w-9 h-9 flex items-center justify-center cursor-none hover-trigger text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
           aria-label="Toggle theme"
         >
-          {theme === "dark" ? (
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="relative w-4 h-4 flex items-center justify-center">
+            {/* Dark Theme (Moon) */}
+            <span
+              className="absolute inset-0 flex items-center justify-center transition-all duration-500"
+              style={{
+                transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+                opacity: theme === "dark" ? 1 : 0,
+                transform:
+                  theme === "dark"
+                    ? "translateY(0) scale(1)"
+                    : "translateY(100%) scale(0.5)",
+                pointerEvents: theme === "dark" ? "auto" : "none",
+              }}
             >
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-            </svg>
-          ) : (
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              <svg
+                className="w-4 h-4 fill-none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            </span>
+
+            {/* Light Theme (Sun) */}
+            <span
+              className="absolute inset-0 flex items-center justify-center transition-all duration-500"
+              style={{
+                transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+                opacity: theme === "light" ? 1 : 0,
+                transform:
+                  theme === "light"
+                    ? "translateY(0) scale(1)"
+                    : "translateY(-100%) scale(0.5)",
+                pointerEvents: theme === "light" ? "auto" : "none",
+              }}
             >
-              <circle cx="12" cy="12" r="5"></circle>
-              <line x1="12" y1="1" x2="12" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="23"></line>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-              <line x1="1" y1="12" x2="3" y2="12"></line>
-              <line x1="21" y1="12" x2="23" y2="12"></line>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-            </svg>
-          )}
+              <svg
+                className="w-4 h-4 fill-none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            </span>
+          </div>
         </button>
 
         {/* Divider */}
@@ -245,6 +314,41 @@ const FloatingDock = () => {
           "
         >
           Hire Me
+        </a>
+      </div>
+
+      {/* =========================================
+          MOBILE / TABLET DOCK
+          ========================================= */}
+      <div
+        ref={mobileDockRef}
+        className="
+          flex md:hidden items-center justify-center
+          bg-black/80 backdrop-blur-md
+          border border-white/10
+          rounded-full shadow-2xl
+          pointer-events-auto
+          will-change-transform
+          px-6 py-3
+        "
+      >
+        <a
+          href="/resume.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="
+            flex items-center gap-2
+            font-main font-bold text-md text-white/90
+            hover:text-white transition-colors
+          "
+        >
+          <span className="mb-0.5">Resume</span>
+          <svg
+            className="w-4 h-4 fill-current"
+            viewBox="0 0 24 24"
+          >
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z" />
+          </svg>
         </a>
       </div>
     </div>

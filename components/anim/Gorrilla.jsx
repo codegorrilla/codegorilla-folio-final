@@ -23,14 +23,19 @@ export const Gorrilla = () => {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 992px)");
 
-    // Set initial value
-    setIsDesktop(mediaQuery.matches);
+    // Set initial value (deferred to avoid cascading render warning)
+    const timeoutId = setTimeout(() => {
+      setIsDesktop(mediaQuery.matches);
+    }, 0);
 
     // Handle window resize
     const handler = (e) => setIsDesktop(e.matches);
     mediaQuery.addEventListener("change", handler);
 
-    return () => mediaQuery.removeEventListener("change", handler);
+    return () => {
+      mediaQuery.removeEventListener("change", handler);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   useGSAP(
