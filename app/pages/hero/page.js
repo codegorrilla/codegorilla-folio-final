@@ -1,3 +1,4 @@
+"use client";
 import React, { useRef } from "react";
 import { MaskReveal } from "@/components/anim/MaskReveal";
 import { VerticalMarquee } from "@/components/anim/VerticalMarquee";
