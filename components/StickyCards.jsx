@@ -8,6 +8,7 @@ import { useGSAP } from "@gsap/react";
 import HeroPage from "@/app/pages/hero/page";
 import AboutPage from "@/app/pages/about/page";
 import WorkPage from "@/app/pages/work/page";
+import FooterPage from "@/app/pages/footer/pages";
 import { TextGradientFill } from "@/components/anim/TextGradientFill";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -67,10 +68,10 @@ const StickyCards = () => {
 
   return (
     <section className="w-full h-full relative" ref={container}>
-      <HeroPage className="w-full min-h-screen rounded-0 lg:rounded-t-2xl relative flex flex-col justify-center items-center bg-brand-blue pt-4 overflow-hidden sticky-card" />
+      <HeroPage className="w-full min-h-screen rounded-0 lg:rounded-t-2xl relative flex flex-col justify-center items-center bg-brand-blue pt-4 overflow-hidden sticky-card z-[1]" />
 
       <AboutPage
-        className={`w-full min-h-screen rounded-0 lg:rounded-t-2xl flex gap-3 p-6 md:p-10 lg:p-20 relative transition-colors duration-500 will-change-transform sticky-card ${
+        className={`w-full min-h-screen rounded-0 lg:rounded-t-2xl flex gap-3 p-6 md:p-10 lg:p-20 relative transition-colors duration-500 will-change-transform sticky-card z-[2] ${
           theme === "light"
             ? "bg-white text-brand-dark"
             : "bg-brand-dark text-white"
@@ -89,9 +90,22 @@ const StickyCards = () => {
       */}
       <div aria-hidden="true" className="hidden min-[992px]:block h-[3000px]" />
 
-      <WorkPage className="w-full min-h-screen rounded-0 lg:rounded-t-2xl flex gap-3 p-6 md:p-10 lg:p-20 relative bg-brand-yellow text-white will-change-transform sticky-card">
-        Work
-      </WorkPage>
+      <WorkPage
+        className={`w-full min-h-screen rounded-0 lg:rounded-t-2xl flex gap-3 p-6 md:p-10 lg:p-20 relative will-change-transform sticky-card z-[3] ${
+          theme === "light"
+            ? "bg-white text-brand-orange"
+            : "bg-brand-yellow text-white"
+        }`}
+      ></WorkPage>
+
+      {/* 
+        Final spacer to reveal the footer. 
+        As we scroll this distance, the pinned cards will eventually unpin 
+        or the container will finish, revealing the 'fixed' footer behind.
+      */}
+      <div aria-hidden="true" className="h-screen w-full pointer-events-none" />
+
+      <FooterPage className="flex gap-3 p-6 md:p-10 lg:p-20 text-white"></FooterPage>
     </section>
   );
 };

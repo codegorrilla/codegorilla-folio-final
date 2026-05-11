@@ -90,26 +90,39 @@ const Header = ({ variant = "hero", triggerRef }) => {
         // Delay SplitText until after the preloader finishes to prevent bounding box shifts
         gsap.delayedCall(3.75, initHoverEffect);
       } else if (variant === "about") {
-        const parentSection = headerRef.current.parentElement;
+        const trigger = triggerRef?.current || headerRef.current?.parentElement;
         const workCard = document.querySelector(".sticky-card:last-child");
 
         gsap.fromTo(
           headerRef.current,
-          { x: 300, opacity: 0 },
+          { x: 150, opacity: 0 },
           {
             x: 0,
             opacity: 1,
-            duration: 1.0,
+            duration: 1.2,
             ease: "power3.out",
             scrollTrigger: {
-              trigger: parentSection,
+              trigger: trigger,
               start: "top 60%",
-              endTrigger: workCard || parentSection,
-              end: "top 50%",
-              toggleActions: "play reverse play reverse",
+              toggleActions: "play none none reverse",
             },
           },
         );
+
+        // Slide out ONLY when Work section actually enters the viewport
+        if (workCard && workCard !== trigger) {
+          gsap.to(headerRef.current, {
+            y: -100,
+            opacity: 0,
+            ease: "power3.in",
+            scrollTrigger: {
+              trigger: workCard,
+              start: "top 10%",
+              end: "top top",
+              scrub: true,
+            },
+          });
+        }
 
         initHoverEffect();
       } else if (variant === "work") {
