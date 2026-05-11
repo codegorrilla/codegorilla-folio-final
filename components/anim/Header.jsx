@@ -112,6 +112,28 @@ const Header = ({ variant = "hero", triggerRef }) => {
         );
 
         initHoverEffect();
+      } else if (variant === "work") {
+        // Fallback if triggerRef is not yet assigned
+        const trigger = triggerRef?.current || headerRef.current?.parentElement;
+
+        // Slide up and fade in reveal
+        gsap.fromTo(
+          headerRef.current,
+          { y: 150, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1.2,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: trigger,
+              start: "top 80%",
+              toggleActions: "play reverse play reverse",
+            },
+          },
+        );
+
+        initHoverEffect();
       }
 
       return () => {

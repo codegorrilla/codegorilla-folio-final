@@ -66,7 +66,7 @@ const StickyCards = () => {
   );
 
   return (
-    <section className="w-full h-full relative bg-white" ref={container}>
+    <section className="w-full h-full relative" ref={container}>
       <HeroPage className="w-full min-h-screen rounded-0 lg:rounded-t-2xl relative flex flex-col justify-center items-center bg-brand-blue pt-4 overflow-hidden sticky-card" />
 
       <AboutPage
