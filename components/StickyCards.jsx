@@ -8,7 +8,7 @@ import { useGSAP } from "@gsap/react";
 import HeroPage from "@/app/pages/hero/page";
 import AboutPage from "@/app/pages/about/page";
 import WorkPage from "@/app/pages/work/page";
-import FooterPage from "@/app/pages/footer/pages";
+import FooterPage from "@/app/pages/footer/page";
 import { TextGradientFill } from "@/components/anim/TextGradientFill";
 import { useTheme } from "@/hooks/useTheme";
 
