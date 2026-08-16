@@ -368,88 +368,96 @@ const WorkPage = ({ children, ...props }) => {
 
   useGSAP(
     () => {
-      const cards = gsap.utils.toArray(".card-item");
+      const mm = gsap.matchMedia();
 
-      // 1. Entrance / Exit Animation (Slide from top)
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: workContainer.current,
-          start: "top 50%", 
-          toggleActions: "play none none reverse",
-        },
+      mm.add("(min-width: 1200px)", () => {
+        const cards = gsap.utils.toArray(".card-item");
+        if (!cards.length) return;
+
+        // 1. Entrance / Exit Animation (Slide from top)
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: workContainer.current,
+            start: "top 50%", 
+            toggleActions: "play none none reverse",
+          },
+        });
+
+        tl.fromTo(
+          cards,
+          {
+            y: -1000, 
+            scale: 0.9,
+          },
+          {
+            y: 0,
+            scale: 1,
+            stagger: 0.15,
+            duration: 1.2,
+            ease: "power3.out",
+          },
+        );
+
+        // 2. Magnetic Inertia Effect
+        const handleMouseMove = (e) => {
+          if (selectedProject) return; // Disable effect when modal open
+          const { clientX } = e;
+          if (!cardsWrapper.current) return;
+          const wrapperRect = cardsWrapper.current.getBoundingClientRect();
+          const relX = clientX - wrapperRect.left;
+
+          cards.forEach((card) => {
+            const cardRect = card.getBoundingClientRect();
+            const cardCenterX =
+              cardRect.left + cardRect.width / 2 - wrapperRect.left;
+            const dist = relX - cardCenterX;
+            const maxDist = 350;
+
+            if (Math.abs(dist) < maxDist) {
+              const power = Math.pow(1 - Math.abs(dist) / maxDist, 2) * 45;
+              const direction = dist > 0 ? -1 : 1;
+
+              gsap.to(card, {
+                x: direction * power,
+                duration: 0.8,
+                ease: "power2.out",
+                overwrite: "auto",
+              });
+            } else {
+              gsap.to(card, {
+                x: 0,
+                duration: 1.0,
+                ease: "elastic.out(1, 0.7)",
+                overwrite: "auto",
+              });
+            }
+          });
+        };
+
+        const handleMouseLeave = () => {
+          gsap.to(cards, {
+            x: 0,
+            duration: 1.2,
+            ease: "elastic.out(1, 0.5)",
+            overwrite: "auto",
+          });
+        };
+
+        const wrapper = cardsWrapper.current;
+        if (wrapper) {
+          wrapper.addEventListener("mousemove", handleMouseMove);
+          wrapper.addEventListener("mouseleave", handleMouseLeave);
+        }
+
+        return () => {
+          if (wrapper) {
+            wrapper.removeEventListener("mousemove", handleMouseMove);
+            wrapper.removeEventListener("mouseleave", handleMouseLeave);
+          }
+        };
       });
 
-      tl.fromTo(
-        cards,
-        {
-          y: -1000, 
-          scale: 0.9,
-        },
-        {
-          y: 0,
-          scale: 1,
-          stagger: 0.15,
-          duration: 1.2,
-          ease: "power3.out",
-        },
-      );
-
-      // 2. Magnetic Inertia Effect
-      const handleMouseMove = (e) => {
-        if (selectedProject) return; // Disable effect when modal open
-        const { clientX } = e;
-        const wrapperRect = cardsWrapper.current.getBoundingClientRect();
-        const relX = clientX - wrapperRect.left;
-
-        cards.forEach((card) => {
-          const cardRect = card.getBoundingClientRect();
-          const cardCenterX =
-            cardRect.left + cardRect.width / 2 - wrapperRect.left;
-          const dist = relX - cardCenterX;
-          const maxDist = 350;
-
-          if (Math.abs(dist) < maxDist) {
-            const power = Math.pow(1 - Math.abs(dist) / maxDist, 2) * 45;
-            const direction = dist > 0 ? -1 : 1;
-
-            gsap.to(card, {
-              x: direction * power,
-              duration: 0.8,
-              ease: "power2.out",
-              overwrite: "auto",
-            });
-          } else {
-            gsap.to(card, {
-              x: 0,
-              duration: 1.0,
-              ease: "elastic.out(1, 0.7)",
-              overwrite: "auto",
-            });
-          }
-        });
-      };
-
-      const handleMouseLeave = () => {
-        gsap.to(cards, {
-          x: 0,
-          duration: 1.2,
-          ease: "elastic.out(1, 0.5)",
-          overwrite: "auto",
-        });
-      };
-
-      const wrapper = cardsWrapper.current;
-      if (wrapper) {
-        wrapper.addEventListener("mousemove", handleMouseMove);
-        wrapper.addEventListener("mouseleave", handleMouseLeave);
-      }
-
-      return () => {
-        if (wrapper) {
-          wrapper.removeEventListener("mousemove", handleMouseMove);
-          wrapper.removeEventListener("mouseleave", handleMouseLeave);
-        }
-      };
+      return () => mm.revert();
     },
     { scope: workContainer, dependencies: [selectedProject] }
   );
@@ -470,7 +478,7 @@ const WorkPage = ({ children, ...props }) => {
         onClose={() => setSelectedProject(null)} 
       />
 
-      <div className="w-full h-full flex flex-col items-center pt-32 px-10">
+      <div className="w-full h-full flex flex-col items-center pt-32 px-6 md:px-10">
         <div className="relative z-20 flex flex-col items-center">
           <span className="block text-sm font-semibold tracking-[0.25em] uppercase text-brand-orange mb-2">
             work
@@ -484,9 +492,10 @@ const WorkPage = ({ children, ...props }) => {
           </h3>
         </div>
 
+        {/* 4 Cards: Visible ONLY on >= 1200px */}
         <div
           ref={cardsWrapper}
-          className="w-full max-w-7xl mt-40 flex flex-wrap justify-center gap-6 lg:gap-10 relative z-10"
+          className="w-full max-w-7xl mt-40 hidden min-[1200px]:flex flex-wrap justify-center gap-6 lg:gap-10 relative z-10"
         >
           <ProjectCard
             title="figma projects"

@@ -177,19 +177,29 @@ export const ScrambleHoverEffect = () => {
     const el = containerRef.current;
     if (!el) return;
 
-    // Wait one frame so the image has rendered and offsetWidth/Height are set
-    const id = requestAnimationFrame(() => {
-      const cleanup = initGridOverlay(el);
-      // Store cleanup on the ref so the return below can call it
-      el._scrCleanup = cleanup;
+    let cleanup = null;
+    let rafId = null;
+
+    const setup = () => {
+      if (cleanup) cleanup();
+      if (el.offsetWidth > 0 && el.offsetHeight > 0) {
+        cleanup = initGridOverlay(el);
+      }
+    };
+
+    rafId = requestAnimationFrame(() => {
+      setup();
     });
 
-    const currentEl = containerRef.current;
+    const resizeObserver = new ResizeObserver(() => {
+      setup();
+    });
+    resizeObserver.observe(el);
+
     return () => {
-      cancelAnimationFrame(id);
-      if (currentEl?._scrCleanup) {
-        currentEl._scrCleanup();
-      }
+      cancelAnimationFrame(rafId);
+      resizeObserver.disconnect();
+      if (cleanup) cleanup();
     };
   }, []);
 

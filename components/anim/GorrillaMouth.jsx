@@ -16,6 +16,10 @@ const GorrillaMouth = () => {
 
   useGSAP(
     () => {
+      // Only enable mouth toggle animation on desktop (>= 1200px)
+      const mediaQuery = window.matchMedia("(min-width: 1200px)");
+      if (!mediaQuery.matches) return;
+
       //timeline for the animation
       tl.current = gsap.timeline({
         paused: true,

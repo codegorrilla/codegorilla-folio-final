@@ -14,34 +14,41 @@ const gorrillaFig = {
   gorrillaRightEye,
 };
 
-//gorilla face animation
+// Gorilla face animation
 export const Gorrilla = () => {
   const faceTrackerRef = useRef(null);
 
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isMobileTilt, setIsMobileTilt] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 992px)");
+    const desktopMq = window.matchMedia("(min-width: 1200px)");
+    const mobileMq = window.matchMedia("(max-width: 991px)");
 
-    // Set initial value (deferred to avoid cascading render warning)
-    const timeoutId = setTimeout(() => {
-      setIsDesktop(mediaQuery.matches);
-    }, 0);
+    const updateMatches = () => {
+      setIsDesktop(desktopMq.matches);
+      setIsMobileTilt(mobileMq.matches);
+    };
 
-    // Handle window resize
-    const handler = (e) => setIsDesktop(e.matches);
-    mediaQuery.addEventListener("change", handler);
+    // Set initial values
+    const timeoutId = setTimeout(updateMatches, 0);
+
+    desktopMq.addEventListener("change", updateMatches);
+    mobileMq.addEventListener("change", updateMatches);
 
     return () => {
-      mediaQuery.removeEventListener("change", handler);
+      desktopMq.removeEventListener("change", updateMatches);
+      mobileMq.removeEventListener("change", updateMatches);
       clearTimeout(timeoutId);
     };
   }, []);
 
   useGSAP(
     () => {
-      //scaling up the face on first load
-      const faceEl = faceTrackerRef.current.querySelector(".face");
+      // Scaling up the face on first load
+      const faceEl = faceTrackerRef.current?.querySelector(".face");
+      if (!faceEl) return;
+
       gsap.fromTo(
         faceEl,
         { scale: 0 },
@@ -57,6 +64,7 @@ export const Gorrilla = () => {
     { scope: faceTrackerRef },
   );
 
+  // Desktop Mouse Movement Tracking (>= 1200px)
   useGSAP(
     () => {
       if (!isDesktop) return;
@@ -64,6 +72,8 @@ export const Gorrilla = () => {
       const wrapper = document.querySelector(".tracker");
       const gorrillaFace = document.querySelector(".face");
       const gorrillaEyes = document.querySelector(".eyes");
+
+      if (!wrapper || !gorrillaFace || !gorrillaEyes) return;
 
       const figMoveEvent = (e) => {
         const wrapperRect = wrapper.getBoundingClientRect();
@@ -74,9 +84,7 @@ export const Gorrilla = () => {
 
         // Calculate 3D Rotations (tilt face towards cursor)
         const maxRotate = 25; // max 25 degrees tilt
-        // Map distance to rotation. Divide by screen dimensions to normalize.
         const rotateY = (relX / (window.innerWidth / 2)) * maxRotate;
-        // Negative relY because moving mouse DOWN (positive Y) should tilt DOWN (negative rotateX)
         const rotateX = -(relY / (window.innerHeight / 2)) * maxRotate;
 
         // Calculate subtle position shifting
@@ -84,12 +92,11 @@ export const Gorrilla = () => {
         const moveX = (relX / (window.innerWidth / 2)) * maxMove;
         const moveY = (relY / (window.innerHeight / 2)) * maxMove;
 
-        // Restrict eye movement drastically so they stay in their sockets!
-        const maxEyeMove = 12; // 12px max movement relative to face
+        // Restrict eye movement drastically
+        const maxEyeMove = 12;
         const eyeMoveX = (relX / (window.innerWidth / 2)) * maxEyeMove;
         const eyeMoveY = (relY / (window.innerHeight / 2)) * maxEyeMove;
 
-        // Animate the entire face (including eyes)
         gsap.to(gorrillaFace, {
           x: moveX,
           y: moveY,
@@ -101,7 +108,6 @@ export const Gorrilla = () => {
           duration: 0.5,
         });
 
-        // Animate just the eyes for parallax tracking
         gsap.to(gorrillaEyes, {
           x: eyeMoveX,
           y: eyeMoveY,
@@ -138,14 +144,96 @@ export const Gorrilla = () => {
     { scope: faceTrackerRef, dependencies: [isDesktop] },
   );
 
+  // Phone Screen Tilt Effect (< 992px)
+  useGSAP(
+    () => {
+      if (!isMobileTilt) return;
+
+      const gorrillaFace = document.querySelector(".face");
+      const gorrillaEyes = document.querySelector(".eyes");
+
+      if (!gorrillaFace || !gorrillaEyes) return;
+
+      const handleOrientation = (e) => {
+        if (e.gamma === null || e.gamma === undefined) return;
+
+        // gamma is left-to-right tilt (-90 to +90 degrees)
+        // Clamp to [-45, 45] for responsive range
+        const gamma = Math.max(-45, Math.min(45, e.gamma));
+
+        const maxRotateZ = 22; // max 22 deg rotation
+        const rotateZ = (gamma / 45) * maxRotateZ;
+        const rotateY = (gamma / 45) * 18;
+
+        const maxMoveX = 25; // 25px horizontal shift
+        const moveX = (gamma / 45) * maxMoveX;
+
+        const maxEyeMoveX = 8;
+        const eyeMoveX = (gamma / 45) * maxEyeMoveX;
+
+        gsap.to(gorrillaFace, {
+          x: moveX,
+          rotateZ: rotateZ,
+          rotateY: rotateY,
+          transformPerspective: 600,
+          transformOrigin: "center center",
+          ease: "power2.out",
+          duration: 0.35,
+          overwrite: "auto",
+        });
+
+        gsap.to(gorrillaEyes, {
+          x: eyeMoveX,
+          ease: "power2.out",
+          duration: 0.35,
+          overwrite: "auto",
+        });
+      };
+
+      // Request iOS permission if needed on touch
+      const requestPermissionAndListen = () => {
+        if (
+          typeof DeviceOrientationEvent !== "undefined" &&
+          typeof DeviceOrientationEvent.requestPermission === "function"
+        ) {
+          DeviceOrientationEvent.requestPermission()
+            .then((permissionState) => {
+              if (permissionState === "granted") {
+                window.addEventListener("deviceorientation", handleOrientation);
+              }
+            })
+            .catch(() => {});
+        }
+      };
+
+      window.addEventListener("deviceorientation", handleOrientation);
+      window.addEventListener("touchstart", requestPermissionAndListen, { once: true });
+
+      return () => {
+        window.removeEventListener("deviceorientation", handleOrientation);
+        window.removeEventListener("touchstart", requestPermissionAndListen);
+        gsap.to(gorrillaFace, {
+          x: 0,
+          rotateZ: 0,
+          rotateY: 0,
+          duration: 0.5,
+        });
+        gsap.to(gorrillaEyes, {
+          x: 0,
+          duration: 0.5,
+        });
+      };
+    },
+    { scope: faceTrackerRef, dependencies: [isMobileTilt] },
+  );
+
   return (
     <div
-      className="w-full h-full absolute inset-y-[-280px] lg:inset-y-[-120px] transform scale-[0.6] sm:scale-[0.7] md:scale-[0.8] lg:scale-100 flex flex-col justify-center items-center text-center tracker z-0 pointer-events-none origin-bottom landscape:origin-center"
+      className="w-full h-full absolute inset-0 flex flex-col justify-center items-center text-center tracker z-0 pointer-events-none"
       ref={faceTrackerRef}
     >
-      {/* Responsive wrapper that matches the exact dimensions of the scaling face */}
-      <div className="relative w-[clamp(250px,35vw,550px)] face">
-        {/* Face dictates the height of the wrapper */}
+      {/* Responsive wrapper that scales down proportionally with viewport width */}
+      <div className="relative w-[clamp(180px,36vw,520px)] max-w-[85vw] face">
         <Image
           src={gorrillaFig.gorrillaFace}
           className="w-full h-auto object-contain"
@@ -153,8 +241,7 @@ export const Gorrilla = () => {
           priority
         />
 
-        {/* Eyes positioned and sized using percentages so they scale perfectly with the face! 
-            Adjust the top-[%] and left-[%]/right-[%] values to align them perfectly. */}
+        {/* Eyes positioned and sized using percentages */}
         <div className="eyes absolute inset-0">
           <Image
             src={gorrillaFig.gorrillaLeftEye}
@@ -172,3 +259,5 @@ export const Gorrilla = () => {
     </div>
   );
 };
+
+export default Gorrilla;

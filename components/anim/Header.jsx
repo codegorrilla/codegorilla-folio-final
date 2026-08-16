@@ -90,41 +90,45 @@ const Header = ({ variant = "hero", triggerRef }) => {
         // Delay SplitText until after the preloader finishes to prevent bounding box shifts
         gsap.delayedCall(3.75, initHoverEffect);
       } else if (variant === "about") {
-        const trigger = triggerRef?.current || headerRef.current?.parentElement;
-        const workCard = document.querySelector(".sticky-card:last-child");
+        const mm = gsap.matchMedia();
 
-        gsap.fromTo(
-          headerRef.current,
-          { x: 150, opacity: 0 },
-          {
-            x: 0,
-            opacity: 1,
-            duration: 1.2,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: trigger,
-              start: "top 60%",
-              toggleActions: "play none none reverse",
+        mm.add("(min-width: 1200px)", () => {
+          const trigger = triggerRef?.current || headerRef.current?.parentElement;
+          const workCard = document.querySelector(".sticky-card:last-child");
+
+          gsap.fromTo(
+            headerRef.current,
+            { x: 150, opacity: 0 },
+            {
+              x: 0,
+              opacity: 1,
+              duration: 1.2,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: trigger,
+                start: "top 60%",
+                toggleActions: "play none none reverse",
+              },
             },
-          },
-        );
+          );
 
-        // Slide out ONLY when Work section actually enters the viewport
-        if (workCard && workCard !== trigger) {
-          gsap.to(headerRef.current, {
-            y: -100,
-            opacity: 0,
-            ease: "power3.in",
-            scrollTrigger: {
-              trigger: workCard,
-              start: "top 10%",
-              end: "top top",
-              scrub: true,
-            },
-          });
-        }
+          // Slide out ONLY when Work section actually enters the viewport
+          if (workCard && workCard !== trigger) {
+            gsap.to(headerRef.current, {
+              y: -100,
+              opacity: 0,
+              ease: "power3.in",
+              scrollTrigger: {
+                trigger: workCard,
+                start: "top 10%",
+                end: "top top",
+                scrub: true,
+              },
+            });
+          }
 
-        initHoverEffect();
+          initHoverEffect();
+        });
       } else if (variant === "work") {
         // Fallback if triggerRef is not yet assigned
         const trigger = triggerRef?.current || headerRef.current?.parentElement;
@@ -164,7 +168,9 @@ const Header = ({ variant = "hero", triggerRef }) => {
   return (
     <header
       ref={headerRef}
-      className="w-full absolute top-0 right-0 z-20 flex justify-center lg:justify-end items-center p-10 font-main font-black text-white text-[2.5rem] tracking-tighter opacity-0"
+      className={`w-full absolute top-0 right-0 z-20 ${
+        variant === "about" ? "hidden min-[1200px]:flex" : "flex"
+      } justify-center lg:justify-end items-center p-6 sm:p-10 font-main font-black text-white text-[clamp(1.75rem,5vw,2.5rem)] tracking-tighter opacity-0 box-border`}
     >
       <Link
         id={variant === "hero" ? "header-logo" : undefined}

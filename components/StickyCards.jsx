@@ -88,7 +88,7 @@ const StickyCards = () => {
         animation enough room to complete before Work slides in.
         Adjust height to control fill speed (taller = slower fill).
       */}
-      <div aria-hidden="true" className="hidden min-[992px]:block h-[3000px]" />
+      <div aria-hidden="true" className="hidden min-[1200px]:block h-[3000px]" />
 
       <WorkPage
         className={`w-full min-h-screen rounded-0 lg:rounded-t-2xl flex gap-3 p-6 md:p-10 lg:p-20 relative will-change-transform sticky-card z-[3] ${

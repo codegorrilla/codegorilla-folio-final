@@ -12,7 +12,7 @@ export const MaskReveal = () => {
   const size = 300; // Mask diameter
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 992px)");
+    const mediaQuery = window.matchMedia("(min-width: 1200px)");
 
     // Set initial value (deferred to avoid cascading render warning)
     const timeoutId = setTimeout(() => {
@@ -74,7 +74,7 @@ export const MaskReveal = () => {
     <div className="relative w-full h-full reveal-zone grid grid-cols-1 grid-rows-1 justify-items-center items-center overflow-visible">
       {/* LAYER 2: The Body (Background) Content (Placed First so it's behind) */}
       <div className="col-start-1 row-start-1 w-full h-full flex justify-center items-center text-[#afa18f] z-0">
-        <p className="text-[clamp(3rem,21vw,300px)] text-white m-0 leading-none">
+        <p className="text-[clamp(2.5rem,14vw,300px)] text-white m-0 leading-none">
           <TextScaleUp>gorrilla</TextScaleUp>
         </p>
       </div>
@@ -86,7 +86,7 @@ export const MaskReveal = () => {
           style={{ "--x": 0, "--y": 0, "--mask-size": 0 }} // Initialize to size 0
         >
           <p
-            className="text-[clamp(3rem,21vw,300px)] text-black whitespace-nowrap m-0 leading-none pointer-events-auto"
+            className="text-[clamp(2.5rem,14vw,300px)] text-black whitespace-nowrap m-0 leading-none pointer-events-auto"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >

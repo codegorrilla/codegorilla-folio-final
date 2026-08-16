@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -30,8 +30,29 @@ export const TextGradientFill = () => {
   const muscleIconRef = useRef(null);
   const { theme } = useTheme();
 
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1200px)");
+
+    const timeoutId = setTimeout(() => {
+      setIsDesktop(mediaQuery.matches);
+    }, 0);
+
+    const handler = (e) => setIsDesktop(e.matches);
+    mediaQuery.addEventListener("change", handler);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handler);
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
   useGSAP(
     () => {
+      // Only enable SplitText and on-scroll text gradient fill animation on desktop (>= 1200px)
+      if (!isDesktop) return;
+
       const aboutCard = containerRef.current?.closest(".sticky-card");
       const allCards = document.querySelectorAll(".sticky-card");
       const lastCard = allCards[allCards.length - 1] || aboutCard;
@@ -52,13 +73,6 @@ export const TextGradientFill = () => {
 
       gsap.set(allWords, { color: theme === "light" ? "#e3dfdf" : "#313237" });
 
-      // ── Positioning helpers ───────────────────────────────────────────────
-      const ICON_SIZE = 32;
-
-      /**
-       * Above-word: icon sits 10px above the word's top edge.
-       * Starts at word level (y = ICON_SIZE + gap), jumps up to y = 0.
-       */
       // ── Main fill scrub timeline ─────────────────────────────────────────
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -78,10 +92,11 @@ export const TextGradientFill = () => {
         duration: allWords.length * 0.15,
       });
 
-      // ── Scroll range ─────────────────────────────────────────────────────
-      // Force ScrollTrigger to compute its start/end synchronously before reading them
+      // ── In-Content Icons (Only on screen size >= 1200px) ─────────────────
+      const ICON_SIZE = 32;
+
       ScrollTrigger.refresh();
-      
+
       const scrollStart = tl.scrollTrigger.start;
       const scrollEnd = tl.scrollTrigger.end;
       const totalScrollRange = scrollEnd - scrollStart;
@@ -93,7 +108,6 @@ export const TextGradientFill = () => {
         return scrollStart + progress * totalScrollRange;
       }
 
-      // ── Animation States ────────────────────────────────────────────────
       const showAbove = { opacity: 1, y: 0, x: ICON_SIZE + 10 };
       const hideAbove = { opacity: 0, y: ICON_SIZE + 10, x: ICON_SIZE + 10 };
 
@@ -106,7 +120,6 @@ export const TextGradientFill = () => {
         const wRect = wordEl.getBoundingClientRect();
         const gap = 10;
 
-        // Use currentScroll to determine initial state so it doesn't blink out when toggling theme mid-scroll
         const startPos = wordTriggerScroll(allWords.indexOf(wordEl));
         const isActive = currentScroll >= startPos && currentScroll < scrollEnd;
 
@@ -117,11 +130,6 @@ export const TextGradientFill = () => {
         });
       }
 
-      /**
-       * Right-of-word: icon sits 10px to the RIGHT of the word's right edge,
-       * vertically centered on the word.
-       * Starts further left (x = -(ICON_SIZE + 20)), slides right to x = 0.
-       */
       function positionRightOfWord(iconEl, wordEl) {
         if (!iconEl || !wordEl) return;
         const cRect = containerRef.current.getBoundingClientRect();
@@ -132,13 +140,12 @@ export const TextGradientFill = () => {
         const isActive = currentScroll >= startPos && currentScroll < scrollEnd;
 
         gsap.set(iconEl, {
-          left: wRect.right - cRect.left + gap, // 10px right of word's right edge
+          left: wRect.right - cRect.left + gap,
           top: wRect.top - cRect.top + (wRect.height - ICON_SIZE) / 2,
           ...(isActive ? showLeft : hideLeft),
         });
       }
 
-      // ── Word lookups ──────────────────────────────────────────────────────
       const match = (target) => (w) =>
         w.textContent
           .trim()
@@ -155,17 +162,6 @@ export const TextGradientFill = () => {
       positionRightOfWord(reactIconRef.current, developerWord);
       positionRightOfWord(muscleIconRef.current, rightWord);
 
-      // ── Icon ScrollTrigger factory ────────────────────────────────────────
-      /**
-       * Creates a range-based ScrollTrigger for one icon.
-       * showProps / hideProps define the GSAP tween targets for show/hide.
-       * The range covers [wordFillScrollPos → Work's top] so all four
-       * directional callbacks work correctly:
-       *   onEnter      ↓ past word fill pos  → show
-       *   onLeave      ↓ into Work           → hide
-       *   onEnterBack  ↑ from Work           → show
-       *   onLeaveBack  ↑ past word toward Hero → hide
-       */
       function makeIconTrigger(iconEl, wordEl, showProps, hideProps) {
         if (!iconEl || !wordEl) return;
         const startPos = wordTriggerScroll(allWords.indexOf(wordEl));
@@ -193,7 +189,6 @@ export const TextGradientFill = () => {
         });
       }
 
-      // Icons are positioned and initialized with correct states, now create triggers
       makeIconTrigger(rocketIconRef.current, beganWord, showAbove, hideAbove);
       makeIconTrigger(
         robotIconRef.current,
@@ -201,7 +196,6 @@ export const TextGradientFill = () => {
         showAbove,
         hideAbove,
       );
-
       makeIconTrigger(reactIconRef.current, developerWord, showLeft, hideLeft);
       makeIconTrigger(muscleIconRef.current, rightWord, showLeft, hideLeft);
 
@@ -210,56 +204,58 @@ export const TextGradientFill = () => {
         splits.forEach((s) => s.revert());
       };
     },
-    { scope: containerRef, dependencies: [theme] },
+    { scope: containerRef, dependencies: [theme, isDesktop] },
   );
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full font-main font-medium text-[2rem] md:text-[3rem] lg:text-[4rem] leading-[1.15] select-none"
+      className="relative w-full font-main font-medium text-[clamp(1.125rem,1.85vw,2.25rem)] xl:text-[clamp(1.25rem,2.1vw,2.75rem)] leading-[1.28] select-none"
     >
-      {/* Above-word icons (Y-axis) — decorative, must not intercept mouse */}
-      <SvgIcon
-        ref={rocketIconRef}
-        src={ICONS.rocket}
-        className="absolute z-10 pointer-events-none"
-      />
-      <SvgIcon
-        ref={robotIconRef}
-        src={ICONS.robot}
-        className="absolute z-10 pointer-events-none"
-      />
+      {/* Above-word and side icons — visible ONLY for >= 1200px */}
+      {isDesktop && (
+        <>
+          <SvgIcon
+            ref={rocketIconRef}
+            src={ICONS.rocket}
+            className="absolute z-10 pointer-events-none"
+          />
+          <SvgIcon
+            ref={robotIconRef}
+            src={ICONS.robot}
+            className="absolute z-10 pointer-events-none"
+          />
+          <SvgIcon
+            ref={reactIconRef}
+            src={ICONS.react}
+            className="absolute z-10 pointer-events-none"
+          />
+          <SvgIcon
+            ref={muscleIconRef}
+            src={ICONS.muscle}
+            className="absolute z-10 pointer-events-none"
+          />
+        </>
+      )}
 
-      {/* Left-of-word icons (X-axis) — decorative, must not intercept mouse */}
-      <SvgIcon
-        ref={reactIconRef}
-        src={ICONS.react}
-        className="absolute z-10 pointer-events-none"
-      />
-      <SvgIcon
-        ref={muscleIconRef}
-        src={ICONS.muscle}
-        className="absolute z-10 pointer-events-none"
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-y-16 lg:gap-x-20 items-start">
-        <div className="pt-10 lg:pt-20">
-          <span className="block text-sm font-semibold tracking-[0.25em] uppercase text-brand-orange mb-10">
+      <div className="grid grid-cols-1 min-[1200px]:grid-cols-[1fr_auto] gap-y-10 min-[1200px]:gap-x-16 xl:gap-x-20 items-start">
+        <div className="pt-4 sm:pt-6 min-[1200px]:pt-12">
+          <span className="block text-xs sm:text-sm font-semibold tracking-[0.25em] uppercase text-brand-orange mb-[clamp(0.75rem,2vh,2rem)]">
             About
           </span>
 
-          <div className="pb-[60px]" data-split>
+          <div className="pb-[clamp(0.875rem,2.2vh,2.25rem)]" data-split>
             Began as a web designer, spending over a decade crafting layouts and
             delivering across a wide range of disciplines.
           </div>
 
-          <div className="pb-[60px]" data-split>
+          <div className="pb-[clamp(0.875rem,2.2vh,2.25rem)]" data-split>
             But there was always a quiet restlessness — a sense of
             incompleteness — that pushed me to become a self-taught front-end
             developer.
           </div>
 
-          <div className="pb-[60px]" data-split>
+          <div className="pb-[clamp(0.875rem,2.2vh,2.25rem)]" data-split>
             That crossover — a decade of design instinct fused with engineering
             — means I don&apos;t just build things that work. I build things that
             feel right.
@@ -269,12 +265,21 @@ export const TextGradientFill = () => {
             Today I work across the full stack — designing systems, writing
             clean code, and obsessing over the experience in between.
           </div>
-          <div className="mt-10">
+
+          <div className="mt-[clamp(1rem,2.5vh,2.5rem)]">
             <SocialLinks />
+          </div>
+
+          {/* Profile image animation section on mobile/tablet (< 1200px), centered directly below text body */}
+          <div className="w-full flex justify-center items-center px-4 mt-8 min-[1200px]:hidden">
+            <div className="w-full max-w-none min-[992px]:max-w-[480px]">
+              <ScrambleHoverEffect />
+            </div>
           </div>
         </div>
 
-        <div className="pt-10 lg:pt-20 w-full lg:w-[420px] shrink-0">
+        {/* Desktop sidebar: Profile image and Toolkit (>= 1200px) */}
+        <div className="hidden min-[1200px]:block pt-4 min-[1200px]:pt-12 w-[360px] xl:w-[420px] shrink-0">
           <ScrambleHoverEffect />
           <Toolkit />
         </div>
@@ -282,3 +287,4 @@ export const TextGradientFill = () => {
     </div>
   );
 };
+
