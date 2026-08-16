@@ -16,6 +16,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const StickyCards = () => {
   const container = useRef(null);
+  const sentinelRef = useRef(null);
   const { theme } = useTheme();
 
   useGSAP(
@@ -102,10 +103,11 @@ const StickyCards = () => {
         Final spacer to reveal the footer. 
         As we scroll this distance, the pinned cards will eventually unpin 
         or the container will finish, revealing the 'fixed' footer behind.
+        Also used as the ScrollTrigger target for footer animations.
       */}
-      <div aria-hidden="true" className="h-screen w-full pointer-events-none" />
+      <div ref={sentinelRef} aria-hidden="true" className="h-screen w-full pointer-events-none" />
 
-      <FooterPage className="flex gap-3 p-6 md:p-10 lg:p-20 text-white"></FooterPage>
+      <FooterPage className="flex gap-3 p-6 md:p-10 lg:p-20 text-white" triggerRef={sentinelRef}></FooterPage>
     </section>
   );
 };
