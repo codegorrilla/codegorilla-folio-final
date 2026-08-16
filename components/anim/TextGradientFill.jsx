@@ -270,10 +270,13 @@ export const TextGradientFill = () => {
             <SocialLinks />
           </div>
 
-          {/* Profile image animation section on mobile/tablet (< 1200px), centered directly below text body */}
-          <div className="w-full flex justify-center items-center px-4 mt-8 min-[1200px]:hidden">
+          {/* Profile image & Toolkit section on mobile/tablet (< 1200px) */}
+          <div className="w-full flex flex-col items-center px-4 mt-8 min-[1200px]:hidden">
             <div className="w-full max-w-none min-[992px]:max-w-[480px]">
               <ScrambleHoverEffect />
+            </div>
+            <div className="w-full max-w-none min-[992px]:max-w-[480px]">
+              <Toolkit />
             </div>
           </div>
         </div>

@@ -17,6 +17,8 @@ const gorrillaFig = {
 // Gorilla face animation
 export const Gorrilla = () => {
   const faceTrackerRef = useRef(null);
+  const faceRef = useRef(null);
+  const eyesRef = useRef(null);
 
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMobileTilt, setIsMobileTilt] = useState(false);
@@ -46,7 +48,7 @@ export const Gorrilla = () => {
   useGSAP(
     () => {
       // Scaling up the face on first load
-      const faceEl = faceTrackerRef.current?.querySelector(".face");
+      const faceEl = faceRef.current;
       if (!faceEl) return;
 
       gsap.fromTo(
@@ -69,9 +71,9 @@ export const Gorrilla = () => {
     () => {
       if (!isDesktop) return;
 
-      const wrapper = document.querySelector(".tracker");
-      const gorrillaFace = document.querySelector(".face");
-      const gorrillaEyes = document.querySelector(".eyes");
+      const wrapper = faceTrackerRef.current;
+      const gorrillaFace = faceRef.current;
+      const gorrillaEyes = eyesRef.current;
 
       if (!wrapper || !gorrillaFace || !gorrillaEyes) return;
 
@@ -106,6 +108,7 @@ export const Gorrilla = () => {
           transformOrigin: "center center",
           ease: "power3.out",
           duration: 0.5,
+          overwrite: "auto",
         });
 
         gsap.to(gorrillaEyes, {
@@ -113,6 +116,7 @@ export const Gorrilla = () => {
           y: eyeMoveY,
           ease: "power3.out",
           duration: 0.5,
+          overwrite: "auto",
         });
       };
 
@@ -124,12 +128,14 @@ export const Gorrilla = () => {
           rotateY: 0,
           ease: "power3.out",
           duration: 1,
+          overwrite: "auto",
         });
         gsap.to(gorrillaEyes, {
           x: 0,
           y: 0,
           ease: "power3.out",
           duration: 1,
+          overwrite: "auto",
         });
       };
 
@@ -149,8 +155,8 @@ export const Gorrilla = () => {
     () => {
       if (!isMobileTilt) return;
 
-      const gorrillaFace = document.querySelector(".face");
-      const gorrillaEyes = document.querySelector(".eyes");
+      const gorrillaFace = faceRef.current;
+      const gorrillaEyes = eyesRef.current;
 
       if (!gorrillaFace || !gorrillaEyes) return;
 
@@ -233,7 +239,7 @@ export const Gorrilla = () => {
       ref={faceTrackerRef}
     >
       {/* Responsive wrapper that scales down proportionally with viewport width */}
-      <div className="relative w-[clamp(180px,36vw,520px)] max-w-[85vw] face">
+      <div ref={faceRef} className="relative w-[clamp(180px,36vw,520px)] max-w-[85vw] face">
         <Image
           src={gorrillaFig.gorrillaFace}
           className="w-full h-auto object-contain"
@@ -242,7 +248,7 @@ export const Gorrilla = () => {
         />
 
         {/* Eyes positioned and sized using percentages */}
-        <div className="eyes absolute inset-0">
+        <div ref={eyesRef} className="eyes absolute inset-0">
           <Image
             src={gorrillaFig.gorrillaLeftEye}
             className="absolute w-[14.75%] h-auto top-[36%] left-[30%] left-eye"
