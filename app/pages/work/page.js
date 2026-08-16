@@ -1,10 +1,13 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/components/anim/Header";
 import { useTheme } from "@/hooks/useTheme";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
+import { CATEGORIES } from "@/constants/projects";
+import { navigateWithVerticalCurtain } from "@/components/anim/VerticalCurtainTransition";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -90,133 +93,11 @@ const CloseIcon = () => (
 
 // --- Project Card Component ---
 
-// --- Project Details Modal ---
-const ProjectModal = ({ project, onClose }) => {
-  const modalRef = useRef(null);
-  const backdropRef = useRef(null);
-  const contentRef = useRef(null);
-
-  useGSAP(() => {
-    if (!project) return;
-
-    const tl = gsap.timeline();
-    tl.to(backdropRef.current, {
-      opacity: 1,
-      duration: 0.4,
-    })
-    .fromTo(contentRef.current, 
-      { y: 50, opacity: 0, scale: 0.95 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" },
-      "-=0.2"
-    )
-    .from(".modal-stagger", {
-      y: 20,
-      opacity: 0,
-      stagger: 0.1,
-      duration: 0.4,
-      ease: "power2.out"
-    }, "-=0.3");
-
-    return () => {
-      tl.kill();
-    };
-  }, [project]);
-
-  const handleClose = () => {
-    gsap.to(contentRef.current, {
-      y: 30,
-      opacity: 0,
-      scale: 0.98,
-      duration: 0.3,
-      ease: "power2.in",
-      onComplete: onClose
-    });
-    gsap.to(backdropRef.current, { opacity: 0, duration: 0.3 });
-  };
-
-  if (!project) return null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12">
-      <div 
-        ref={backdropRef}
-        onClick={handleClose}
-        className="absolute inset-0 bg-black/60 backdrop-blur-xl opacity-0" 
-      />
-      
-      <div 
-        ref={contentRef}
-        className="relative w-full max-w-5xl bg-white dark:bg-[#1a1b1e] rounded-[2rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-full max-h-[800px] opacity-0"
-      >
-        {/* Left: Image/Showcase */}
-        <div className="w-full md:w-3/5 bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400 font-main italic">
-             {/* Replace with <img src={project.image} /> later */}
-             [ Project Screenshot: {project.title} ]
-          </div>
-          <button 
-            onClick={handleClose}
-            className="absolute top-6 left-6 md:hidden p-3 bg-white/20 backdrop-blur-md rounded-full text-white"
-          >
-            <CloseIcon />
-          </button>
-        </div>
-
-        {/* Right: Info */}
-        <div className="w-full md:w-2/5 p-8 md:p-12 flex flex-col justify-between overflow-y-auto">
-          <div>
-            <div className="flex justify-between items-start mb-8">
-              <span className="text-brand-orange font-bold tracking-widest uppercase text-xs modal-stagger">
-                Project Detail
-              </span>
-              <button 
-                onClick={handleClose}
-                className="hidden md:block p-2 hover:rotate-90 transition-transform duration-300"
-              >
-                <CloseIcon />
-              </button>
-            </div>
-            
-            <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight modal-stagger">
-              {project.title}
-            </h2>
-            
-            <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed mb-10 modal-stagger">
-              {project.summary}
-            </p>
-
-            <div className="mb-10 modal-stagger">
-              <h5 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
-                Tech Stack
-              </h5>
-              <div className="flex flex-wrap gap-2">
-                {project.stack.map((tech, i) => (
-                  <span 
-                    key={i} 
-                    className="px-4 py-1.5 rounded-full bg-gray-100 dark:bg-white/5 text-sm font-medium"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <a 
-            href="#" 
-            className="w-full py-5 bg-brand-orange text-white rounded-2xl font-bold text-center hover:scale-[1.02] active:scale-[0.98] transition-transform modal-stagger"
-          >
-            View Live Project
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // --- Project Card Component ---
 
 const ProjectCard = ({
+  categoryKey,
+  activeCard,
   title,
   logo,
   bgColor,
@@ -228,6 +109,12 @@ const ProjectCard = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const cardRef = useRef(null);
   const isPlayground = title === "playground";
+
+  useEffect(() => {
+    if (activeCard && activeCard === categoryKey) {
+      setIsFlipped(true);
+    }
+  }, [activeCard, categoryKey]);
 
   const handleFlip = (e) => {
     e.stopPropagation();
@@ -275,6 +162,7 @@ const ProjectCard = ({
 
         {/* Back Face */}
         <div
+          onClick={(e) => e.stopPropagation()}
           className={`backface-hidden rotate-y-180 absolute inset-0 rounded-3xl p-8 flex flex-col bg-white text-black shadow-2xl`}
         >
           <button
@@ -292,9 +180,9 @@ const ProjectCard = ({
                 key={i}
                 onClick={(e) => {
                   e.stopPropagation(); // Don't flip back
-                  onProjectClick(proj);
+                  onProjectClick(proj, e);
                 }}
-                className="group flex items-center justify-between cursor-none"
+                className="group flex items-center justify-between cursor-pointer"
               >
                 <span className="font-medium text-lg leading-tight group-hover:text-brand-orange transition-colors">
                   {proj.title}
@@ -314,56 +202,32 @@ const ProjectCard = ({
 // --- Main Work Page Component ---
 
 const WorkPage = ({ children, ...props }) => {
+  const router = useRouter();
   const { theme } = useTheme();
   const workContainer = useRef(null);
   const cardsWrapper = useRef(null);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [activeCard, setActiveCard] = useState(null);
 
-  // Sample Detailed Data
-  const CATEGORIES = {
-    figma: [
-      { 
-        title: "E-commerce UI", 
-        summary: "A high-fidelity minimalist shopping experience designed for luxury brands. Focused on micro-interactions and seamless navigation.", 
-        stack: ["Figma", "Auto-layout", "Prototyping"] 
-      },
-      { 
-        title: "SaaS Dashboard", 
-        summary: "A data-intensive management console with dark mode optimization and responsive layout components.", 
-        stack: ["Figma", "Design Systems", "Iconography"] 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const cardParam = params.get("card");
+      if (cardParam) {
+        setActiveCard(cardParam);
       }
-    ],
-    nextjs: [
-      { 
-        title: "Blog Platform", 
-        summary: "A full-stack blogging engine with markdown support, dynamic routing, and server-side rendering for optimal SEO.", 
-        stack: ["Next.js", "Tailwind", "Sanity.io"] 
-      },
-      { 
-        title: "SaaS Boilerplate", 
-        summary: "The ultimate starter kit for Next.js developers, featuring authentication, Stripe integration, and global state management.", 
-        stack: ["Next.js", "Prisma", "Clerk"] 
+    }
+  }, []);
+
+  const handleProjectSelect = (project, event) => {
+    navigateWithVerticalCurtain(
+      router,
+      `/projects/${project.id}`,
+      event,
+      {
+        title: project.title,
+        category: project.categoryLabel || project.category,
       }
-    ],
-    react: [
-      { 
-        title: "Weather App", 
-        summary: "A real-time weather tracking application using OpenWeather API with dynamic glassmorphism effects based on climate.", 
-        stack: ["React", "GSAP", "API Integration"] 
-      },
-      { 
-        title: "Chat UI", 
-        summary: "A smooth, animated messaging interface built with Framer Motion and optimized for mobile-first interactions.", 
-        stack: ["React", "Framer Motion", "Styled Components"] 
-      }
-    ],
-    playground: [
-      { 
-        title: "GSAP Experiments", 
-        summary: "A collection of complex scroll-triggered animations and mouse-following inertia effects.", 
-        stack: ["GSAP", "JavaScript"] 
-      }
-    ]
+    );
   };
 
   useGSAP(
@@ -374,33 +238,37 @@ const WorkPage = ({ children, ...props }) => {
         const cards = gsap.utils.toArray(".card-item");
         if (!cards.length) return;
 
-        // 1. Entrance / Exit Animation (Slide from top)
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: workContainer.current,
-            start: "top 50%", 
-            toggleActions: "play none none reverse",
-          },
-        });
+        // If returning with activeCard or #work, set cards in place immediately
+        if (typeof window !== "undefined" && (window.location.search.includes("card=") || window.location.hash === "#work")) {
+          gsap.set(cards, { y: 0, scale: 1 });
+        } else {
+          // 1. Entrance / Exit Animation (Slide from top)
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: workContainer.current,
+              start: "top 50%",
+              toggleActions: "play none none reverse",
+            },
+          });
 
-        tl.fromTo(
-          cards,
-          {
-            y: -1000, 
-            scale: 0.9,
-          },
-          {
-            y: 0,
-            scale: 1,
-            stagger: 0.15,
-            duration: 1.2,
-            ease: "power3.out",
-          },
-        );
+          tl.fromTo(
+            cards,
+            {
+              y: -1000,
+              scale: 0.9,
+            },
+            {
+              y: 0,
+              scale: 1,
+              stagger: 0.15,
+              duration: 1.2,
+              ease: "power3.out",
+            }
+          );
+        }
 
         // 2. Magnetic Inertia Effect
         const handleMouseMove = (e) => {
-          if (selectedProject) return; // Disable effect when modal open
           const { clientX } = e;
           if (!cardsWrapper.current) return;
           const wrapperRect = cardsWrapper.current.getBoundingClientRect();
@@ -459,24 +327,19 @@ const WorkPage = ({ children, ...props }) => {
 
       return () => mm.revert();
     },
-    { scope: workContainer, dependencies: [selectedProject] }
+    { scope: workContainer }
   );
 
   return (
     <section
       {...props}
+      id="work"
       ref={workContainer}
       className={`relative min-h-screen transition-colors duration-500 pb-24 overflow-hidden ${
         props.className || ""
       } ${theme === "light" ? "bg-white" : "bg-brand-yellow"}`}
     >
       <Header variant="work" triggerRef={workContainer} />
-
-      {/* Project Details Modal Overlay */}
-      <ProjectModal 
-        project={selectedProject} 
-        onClose={() => setSelectedProject(null)} 
-      />
 
       <div className="w-full h-full flex flex-col items-center pt-32 px-6 md:px-10">
         <div className="relative z-20 flex flex-col items-center">
@@ -498,36 +361,44 @@ const WorkPage = ({ children, ...props }) => {
           className="w-full max-w-7xl mt-40 hidden min-[1200px]:flex flex-wrap justify-center gap-6 lg:gap-10 relative z-10"
         >
           <ProjectCard
+            categoryKey="figma"
+            activeCard={activeCard}
             title="figma projects"
             logo={<FigmaLogo />}
             bgColor="bg-white"
             textColor="text-black"
             rotation="rotate-[-4deg]"
             projects={CATEGORIES.figma}
-            onProjectClick={setSelectedProject}
+            onProjectClick={handleProjectSelect}
           />
           <ProjectCard
+            categoryKey="nextjs"
+            activeCard={activeCard}
             title="nextjs projects"
             logo={<NextLogo />}
             bgColor="bg-black"
             rotation="rotate-[2deg]"
             projects={CATEGORIES.nextjs}
-            onProjectClick={setSelectedProject}
+            onProjectClick={handleProjectSelect}
           />
           <ProjectCard
+            categoryKey="react"
+            activeCard={activeCard}
             title="react projects"
             logo={<ReactLogo />}
             bgColor="bg-brand-blue"
             rotation="rotate-[-1deg]"
             projects={CATEGORIES.react}
-            onProjectClick={setSelectedProject}
+            onProjectClick={handleProjectSelect}
           />
           <ProjectCard
+            categoryKey="playground"
+            activeCard={activeCard}
             title="playground"
             bgColor="bg-brand-orange"
             rotation="rotate-[3deg]"
             projects={CATEGORIES.playground}
-            onProjectClick={setSelectedProject}
+            onProjectClick={handleProjectSelect}
           />
         </div>
 

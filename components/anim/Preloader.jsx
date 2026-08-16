@@ -19,7 +19,7 @@ const Preloader = ({ onComplete }) => {
       const tl = gsap.timeline({
         onComplete: () => {
           setIsMounted(false);
-          onComplete?.(); //if (onComplete) onComplete();
+          onComplete?.();
         },
       });
 
@@ -50,18 +50,18 @@ const Preloader = ({ onComplete }) => {
       const mm = gsap.matchMedia();
 
       // ── 2. The Outro & Text Handoff ──────────────────────────────────────
-      // Fade out the background to reveal the page (common to both)
+      // Fade out the background to reveal the page
       tl.to(
         container.current,
         {
           backgroundColor: "rgba(255, 255, 255, 0)",
-          duration: 1.5,
+          duration: 1.2,
           ease: "power2.inOut",
         },
         "+=0.2",
       );
 
-      // Slide down and fade out the terminal counter (common to both)
+      // Slide down and fade out the terminal counter
       tl.to(
         counterWrapperRef.current,
         {
@@ -74,26 +74,32 @@ const Preloader = ({ onComplete }) => {
       );
 
       mm.add("(min-width: 992px)", () => {
-        // Desktop: The text physically fits itself over the header logo using Flip
+        const isWorkReturn =
+          typeof window !== "undefined" &&
+          (window.location.hash === "#work" ||
+            window.location.search.includes("card="));
+
         const headerLogo = document.querySelector("#header-logo");
-        if (headerLogo) {
+
+        if (headerLogo && !isWorkReturn) {
+          // Desktop Fresh Landing: Text physically fits itself over header logo using Flip
           tl.add(
             Flip.fit(textRef.current, headerLogo, {
-              duration: 1.5, // Slower, clearer transition
+              duration: 1.5,
               ease: "power3.inOut",
-              scale: true, // Use scale instead of width/height
+              scale: true,
             }),
-            "<", // Start exactly as the background starts fading
+            "<",
           );
         } else {
-          // Fallback
+          // Desktop Work Return: Smooth upward float & fade out directly revealing Work section
           tl.to(
             textRef.current,
             {
-              scale: 0.3,
-              y: "-40vh",
+              scale: 0.7,
+              y: -60,
               opacity: 0,
-              duration: 1.5,
+              duration: 1.2,
               ease: "power3.inOut",
             },
             "<",
@@ -102,15 +108,13 @@ const Preloader = ({ onComplete }) => {
       });
 
       mm.add("(max-width: 991px)", () => {
-        // Mobile/Tablet: A stable "Fade & Slide" transition instead of Flip
-        // This avoids layout calculation glitches on mobile Chrome
         tl.to(
           textRef.current,
           {
-            y: -100, // Slide up towards the header area
-            scale: 0.4,
+            y: -80,
+            scale: 0.5,
             opacity: 0,
-            duration: 1.5,
+            duration: 1.2,
             ease: "power3.inOut",
           },
           "<",

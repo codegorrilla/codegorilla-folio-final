@@ -1,6 +1,7 @@
 import localFont from "next/font/local";
 import { Erica_One } from "next/font/google";
 import CustomCursor from "@/components/ui/CustomCursor";
+import VerticalCurtainTransition from "@/components/anim/VerticalCurtainTransition";
 import { ThemeProvider } from "@/provider/ThemeProvider";
 
 const ericaOne = Erica_One({
@@ -28,11 +29,37 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${satoshiVariable.variable} ${ericaOne.variable}  h-full antialiased`}
+      suppressHydrationWarning
+      className={`${satoshiVariable.variable} ${ericaOne.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-brand-orange">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-[#141518]"
+      >
+        {/*
+          Anti-FOUC script: runs synchronously before any HTML is painted.
+          Reads sessionStorage and sets --curtain-y so the curtain covers the
+          screen before React hydrates. Pattern from next-themes.
+        */}
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (sessionStorage.getItem('curtain-transition')) {
+                  document.documentElement.style.setProperty('--curtain-y', '0%');
+                } else {
+                  document.documentElement.style.setProperty('--curtain-y', '100%');
+                }
+              } catch(e) {
+                document.documentElement.style.setProperty('--curtain-y', '100%');
+              }
+            `,
+          }}
+        />
         <ThemeProvider>
           <CustomCursor />
+          <VerticalCurtainTransition />
           {children}
         </ThemeProvider>
       </body>
