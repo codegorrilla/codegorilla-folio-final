@@ -107,3 +107,11 @@ body {
 .rotate-y-180 {
   transform: rotateY(180deg);
 }
+
+/* 3D Rotating Cards */
+.testi_3d_card {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}

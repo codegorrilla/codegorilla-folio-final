@@ -1,5 +1,4 @@
 import SvgIcon from "./SvgIcon";
-import { useTheme } from "@/hooks/useTheme";
 
 /**
  * SOCIALS config
@@ -53,8 +52,6 @@ const SOCIALS = [
 ];
 
 const SocialLinks = () => {
-  const { theme } = useTheme();
-
   return (
     <ul className="flex items-center gap-5" aria-label="Social links">
       {SOCIALS.map(({ key, label, href, src, color }) => (
@@ -77,12 +74,7 @@ const SocialLinks = () => {
             <SvgIcon
               src={src}
               size={28}
-              className={`
-                block
-                group-hover:scale-110
-                transition-all duration-300 ease-out
-                ${theme === "light" ? "brightness-0" : "brightness-0 invert"}
-              `}
+              className="block group-hover:scale-110 transition-all duration-300 ease-out brightness-0 invert"
             />
           </a>
         </li>

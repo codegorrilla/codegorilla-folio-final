@@ -6,7 +6,6 @@ import { notFound } from "next/navigation";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { getProjectById, PROJECTS } from "@/constants/projects";
-import { useTheme } from "@/hooks/useTheme";
 import { navigateWithVerticalCurtain } from "@/components/anim/VerticalCurtainTransition";
 
 const ArrowLeftIcon = () => (
@@ -44,7 +43,6 @@ const ExternalLinkIcon = () => (
 
 export default function ProjectDetailsPage({ params }) {
   const router = useRouter();
-  const { theme } = useTheme();
   const pageContainerRef = useRef(null);
 
   // Unwrap params using React.use for Next.js 15/16 client components
@@ -98,21 +96,13 @@ export default function ProjectDetailsPage({ params }) {
   return (
     <main
       ref={pageContainerRef}
-      className={`min-h-screen w-full transition-colors duration-500 py-8 md:py-16 px-6 md:px-12 lg:px-20 ${
-        theme === "light"
-          ? "bg-[#faf9f6] text-brand-dark"
-          : "bg-[#141518] text-white"
-      }`}
+      className="min-h-screen w-full transition-colors duration-500 py-8 md:py-16 px-6 md:px-12 lg:px-20 bg-[#141518] text-white"
     >
       {/* Top Navigation Bar */}
       <div className="max-w-7xl mx-auto flex items-center justify-between mb-8 md:mb-12 anim-stagger">
         <button
           onClick={handleBackNavigation}
-          className={`group flex items-center gap-3 px-5 py-2.5 rounded-full border transition-all duration-300 font-main font-semibold text-sm ${
-            theme === "light"
-              ? "bg-white border-black/10 hover:border-brand-orange hover:text-brand-orange shadow-sm"
-              : "bg-white/5 border-white/10 hover:border-brand-yellow hover:text-brand-yellow shadow-sm"
-          }`}
+          className="group flex items-center gap-3 px-5 py-2.5 rounded-full border transition-all duration-300 font-main font-semibold text-sm bg-white/5 border-white/10 hover:border-brand-yellow hover:text-brand-yellow shadow-sm"
         >
           <span className="transition-transform duration-300 group-hover:-translate-x-1">
             <ArrowLeftIcon />

@@ -9,7 +9,6 @@ import SvgIcon from "../ui/SvgIcon";
 import Toolkit from "@/components/ui/Toolkit";
 import SocialLinks from "@/components/ui/SocialLinks";
 import { ScrambleHoverEffect } from "./ScrambleHoverEffect";
-import { useTheme } from "@/hooks/useTheme";
 
 gsap.registerPlugin(SplitText, ScrollTrigger);
 
@@ -28,7 +27,6 @@ export const TextGradientFill = () => {
   // Left-of-word icons (X-axis animation)
   const reactIconRef = useRef(null);
   const muscleIconRef = useRef(null);
-  const { theme } = useTheme();
 
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -71,7 +69,7 @@ export const TextGradientFill = () => {
         allWords.push(...split.words);
       });
 
-      gsap.set(allWords, { color: theme === "light" ? "#e3dfdf" : "#313237" });
+      gsap.set(allWords, { color: "#313237" });
 
       // ── Main fill scrub timeline ─────────────────────────────────────────
       const tl = gsap.timeline({
@@ -86,7 +84,7 @@ export const TextGradientFill = () => {
       });
 
       tl.to(allWords, {
-        color: theme === "light" ? "#242529" : "#ffffff",
+        color: "#ffffff",
         stagger: { each: 0.15, ease: "none" },
         ease: "none",
         duration: allWords.length * 0.15,
@@ -204,7 +202,7 @@ export const TextGradientFill = () => {
         splits.forEach((s) => s.revert());
       };
     },
-    { scope: containerRef, dependencies: [theme, isDesktop] },
+    { scope: containerRef, dependencies: [isDesktop] },
   );
 
   return (

@@ -1,6 +1,5 @@
 "use client";
 import React, { useRef, useEffect } from "react";
-import { useTheme } from "@/hooks/useTheme";
 
 const SPEC_GROUPS = [
   {
@@ -138,8 +137,6 @@ const SpecItem = ({ name, reveal }) => {
 };
 
 const Toolkit = () => {
-  const { theme } = useTheme();
-
   return (
     <div className="w-full relative mt-8 sm:mt-10 select-none">
       {/* Header Block */}

@@ -1,17 +1,16 @@
 "use client";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/anim/Header";
-import { useTheme } from "@/hooks/useTheme";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { CATEGORIES } from "@/constants/projects";
+import { PROJECTS } from "@/constants/projects";
 import { navigateWithVerticalCurtain } from "@/components/anim/VerticalCurtainTransition";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// --- Icons ---
+// --- SVG Icons ---
 const FigmaLogo = () => (
   <svg
     width="100%"
@@ -51,9 +50,10 @@ const NextLogo = () => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
+    <circle cx="64" cy="64" r="64" fill="currentColor" fillOpacity="0.1" />
     <path
       d="M64 0C28.65 0 0 28.65 0 64C0 99.35 28.65 128 64 128C99.35 128 128 99.35 128 64C128 28.65 99.35 0 64 0ZM107.5 110L42.5 32H32V96H40V48L97.5 116C87.5 123.5 76 128 64 128C28.65 128 0 99.35 0 64C0 28.65 28.65 0 64 0C99.35 0 128 28.65 128 64C128 82 120.5 98.5 107.5 110ZM88 96H96V56L88 46V96Z"
-      fill="white"
+      fill="currentColor"
     />
   </svg>
 );
@@ -75,10 +75,27 @@ const ReactLogo = () => (
   </svg>
 );
 
-const CloseIcon = () => (
+const PlaygroundLogo = () => (
   <svg
-    width="24"
-    height="24"
+    width="100%"
+    height="100%"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polygon points="12 2 2 7 12 12 22 7 12 2" fill="currentColor" fillOpacity="0.15" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
+  </svg>
+);
+
+const ArrowRightIcon = () => (
+  <svg
+    width="18"
+    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -86,137 +103,100 @@ const CloseIcon = () => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <line x1="18" y1="6" x2="6" y2="18"></line>
-    <line x1="6" y1="6" x2="18" y2="18"></line>
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+    <polyline points="12 5 19 12 12 19"></polyline>
   </svg>
 );
 
-// --- Project Card Component ---
-
-// --- Project Card Component ---
-
-const ProjectCard = ({
-  categoryKey,
-  activeCard,
-  title,
-  logo,
-  bgColor,
-  textColor = "text-white",
-  rotation,
-  projects = [],
-  onProjectClick,
-}) => {
-  const [isFlipped, setIsFlipped] = useState(false);
-  const cardRef = useRef(null);
-  const isPlayground = title === "playground";
-
-  useEffect(() => {
-    if (activeCard && activeCard === categoryKey) {
-      setIsFlipped(true);
-    }
-  }, [activeCard, categoryKey]);
-
-  const handleFlip = (e) => {
-    e.stopPropagation();
-    setIsFlipped(!isFlipped);
-  };
-
-  useGSAP(() => {
-    gsap.to(cardRef.current, {
-      rotationY: isFlipped ? 180 : 0,
-      duration: 0.8,
-      ease: "power3.inOut",
-      transformOrigin: "center",
-    });
-  }, [isFlipped]);
-
-  return (
-    <div
-      className={`perspective-1000 w-full max-w-[280px] aspect-[3/4] ${rotation} card-item`}
-    >
-      <div
-        ref={cardRef}
-        className="preserve-3d relative w-full h-full cursor-pointer"
-        onClick={handleFlip}
-      >
-        {/* Front Face */}
-        <div
-          className={`backface-hidden absolute inset-0 rounded-3xl flex flex-col justify-between p-8 shadow-2xl transition-all duration-300 ${bgColor} ${textColor} ${isPlayground ? "pl-0" : "pl-8"}`}
-        >
-          {!isPlayground ? (
-            <>
-              <h4 className="text-[2rem] font-black leading-tight capitalize max-w-[150px]">
-                {title}
-              </h4>
-              <div className="w-12 h-12">{logo}</div>
-            </>
-          ) : (
-            <div className="h-full w-full flex flex-col justify-end items-end relative pl-0 overflow-hidden">
-              <div className="absolute top-1/2 -left-5 w-48 h-48 bg-brand-yellow rounded-full -translate-y-1/2" />
-              <h4 className="text-[2rem] font-black leading-tight capitalize z-10">
-                {title}
-              </h4>
-            </div>
-          )}
-        </div>
-
-        {/* Back Face */}
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className={`backface-hidden rotate-y-180 absolute inset-0 rounded-3xl p-8 flex flex-col bg-white text-black shadow-2xl`}
-        >
-          <button
-            onClick={handleFlip}
-            className="absolute top-4 right-4 p-2 hover:bg-black/5 rounded-full transition-colors z-20"
-          >
-            <CloseIcon />
-          </button>
-          <h4 className="text-xl font-black mb-6 uppercase tracking-tight border-b pb-2">
-            Recent {title.split(" ")[0]}
-          </h4>
-          <ul className="flex flex-col gap-4">
-            {projects.map((proj, i) => (
-              <li
-                key={i}
-                onClick={(e) => {
-                  e.stopPropagation(); // Don't flip back
-                  onProjectClick(proj, e);
-                }}
-                className="group flex items-center justify-between cursor-pointer"
-              >
-                <span className="font-medium text-lg leading-tight group-hover:text-brand-orange transition-colors">
-                  {proj.title}
-                </span>
-                <span className="opacity-0 group-hover:opacity-100 transition-opacity text-brand-orange font-bold text-xl translate-x-[-10px] group-hover:translate-x-0 duration-300">
-                  →
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
+const getCategoryLogo = (category) => {
+  switch (category) {
+    case "figma":
+      return <FigmaLogo />;
+    case "nextjs":
+      return <NextLogo />;
+    case "react":
+      return <ReactLogo />;
+    case "playground":
+    default:
+      return <PlaygroundLogo />;
+  }
 };
 
-// --- Main Work Page Component ---
+// Distinct, vibrant color palettes and card configurations
+const CARD_CONFIGS = [
+  {
+    id: "ecommerce-ui",
+    variant: "landscape",
+    containerBg: "bg-[#ECE6F8] text-[#1D192B] border-[#D0BCFF]/60",
+    badgeBg: "bg-[#7C3AED]/15 text-[#6D28D9]",
+    btnClass: "bg-[#4F378B] text-white hover:bg-[#38236B]",
+    accentColor: "#7C3AED",
+    stat1: { value: "94%", label: "checkout conversion" },
+    stat2: { value: "60fps", label: "fluid micro-prototypes" },
+  },
+  {
+    id: "saas-dashboard",
+    variant: "square",
+    containerBg: "bg-[#18181B] text-[#FAFAFA] border-white/10 shadow-black/40",
+    badgeBg: "bg-[#06B6D4]/20 text-[#38BDF8]",
+    btnClass: "bg-white text-black hover:bg-neutral-200",
+    accentColor: "#06B6D4",
+    stat1: { value: "0ms", label: "telemetry latency" },
+  },
+  {
+    id: "blog-platform",
+    variant: "landscape",
+    containerBg: "bg-[#FBF8EF] text-[#292524] border-[#E7E5E4]",
+    badgeBg: "bg-[#D97706]/15 text-[#B45309]",
+    btnClass: "bg-[#292524] text-white hover:bg-black",
+    accentColor: "#D97706",
+    stat1: { value: "100", label: "Core Web Vitals" },
+    stat2: { value: "10x", label: "instant ISR cache" },
+  },
+  {
+    id: "saas-boilerplate",
+    variant: "square",
+    containerBg: "bg-[#FFE4E6] text-[#881337] border-[#FECDD3]",
+    badgeBg: "bg-[#F43F5E]/20 text-[#BE123C]",
+    btnClass: "bg-[#9F1239] text-white hover:bg-[#881337]",
+    accentColor: "#F43F5E",
+    stat1: { value: "48h", label: "time to production" },
+  },
+  {
+    id: "weather-app",
+    variant: "landscape",
+    containerBg: "bg-[#DCFCE7] text-[#064E3B] border-[#A7F3D0]",
+    badgeBg: "bg-[#10B981]/20 text-[#047857]",
+    btnClass: "bg-[#065F46] text-white hover:bg-[#064E3B]",
+    accentColor: "#10B981",
+    stat1: { value: "7-day", label: "hyper-local forecast" },
+    stat2: { value: "0.2s", label: "dynamic canvas sync" },
+  },
+  {
+    id: "chat-ui",
+    variant: "square",
+    containerBg: "bg-[#EFF6FF] text-[#1E3A8A] border-[#BFDBFE]",
+    badgeBg: "bg-[#3B82F6]/20 text-[#1D4ED8]",
+    btnClass: "bg-[#1E40AF] text-white hover:bg-[#1E3A8A]",
+    accentColor: "#3B82F6",
+    stat1: { value: "120Hz", label: "spring layout physics" },
+  },
+  {
+    id: "gsap-experiments",
+    variant: "landscape",
+    containerBg: "bg-[#FFEDD5] text-[#7C2D12] border-[#FED7AA]",
+    badgeBg: "bg-[#F97316]/20 text-[#C2410C]",
+    btnClass: "bg-[#9A3412] text-white hover:bg-[#7C2D12]",
+    accentColor: "#F97316",
+    stat1: { value: "4D", label: "perspective inertia" },
+    stat2: { value: "120fps", label: "kinetic scroll timeline" },
+  },
+];
 
 const WorkPage = ({ children, ...props }) => {
   const router = useRouter();
-  const { theme } = useTheme();
-  const workContainer = useRef(null);
-  const cardsWrapper = useRef(null);
-  const [activeCard, setActiveCard] = useState(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const cardParam = params.get("card");
-      if (cardParam) {
-        setActiveCard(cardParam);
-      }
-    }
-  }, []);
+  const sectionRef = useRef(null);
+  const trackRef = useRef(null);
 
   const handleProjectSelect = (project, event) => {
     navigateWithVerticalCurtain(
@@ -232,178 +212,421 @@ const WorkPage = ({ children, ...props }) => {
 
   useGSAP(
     () => {
-      const mm = gsap.matchMedia();
+      const section = sectionRef.current;
+      const track = trackRef.current;
+      if (!section || !track) return;
 
-      mm.add("(min-width: 1200px)", () => {
-        const cards = gsap.utils.toArray(".card-item");
-        if (!cards.length) return;
+      const cards = gsap.utils.toArray(".testi_3d_card");
+      if (!cards.length) return;
 
-        // If returning with activeCard or #work, set cards in place immediately
-        if (typeof window !== "undefined" && (window.location.search.includes("card=") || window.location.hash === "#work")) {
-          gsap.set(cards, { y: 0, scale: 1 });
-        } else {
-          // 1. Entrance / Exit Animation (Slide from top)
-          const tl = gsap.timeline({
-            scrollTrigger: {
-              trigger: workContainer.current,
-              start: "top 50%",
-              toggleActions: "play none none reverse",
-            },
-          });
+      let stInstance = null;
 
-          tl.fromTo(
-            cards,
-            {
-              y: -1000,
-              scale: 0.9,
-            },
-            {
-              y: 0,
-              scale: 1,
-              stagger: 0.15,
-              duration: 1.2,
-              ease: "power3.out",
-            }
-          );
+      // Mathematical 3D ribbon parameters (Wisprflow Pattern calibrated for zero edge-clipping)
+      const GAP_PCT = 14;
+      const GAP_GROW_PCT = 0;
+      const GAP_FROM_PX = 1920;
+      const GAP_PCT_MOBILE = 20;
+      const GAP_MIN_PX = 32;
+      const GAP_MAX_PX = 140;
+      const SCROLL_RATIO = 0.95;
+
+      const ORBIT_CARD_PCT = 35;
+      const ORBIT_MIN_PX = 160;
+      const PERSP_CARD_PCT = 260;
+      const ROT_IN = -22;
+      const ROT_OUT = 22;
+      const ROT_EASE = "power1.inOut";
+      const ROT_SPAN_PCT = 210;
+
+      const DECK_SCALE_GROW = 0.4;
+      const DECK_FROM_PX = 1920;
+      const DECK_SCALE_MAX = 1.2;
+
+      const MIN_W = 768;
+      const SCRUB = 1.2;
+      const SCRUB_MOBILE = 1.0;
+
+      function destroy() {
+        if (stInstance) {
+          stInstance.kill();
+          stInstance = null;
+        }
+      }
+
+      function build() {
+        destroy();
+
+        const vw = window.innerWidth;
+        const mobile = vw < MIN_W;
+        const scrubVal = mobile ? SCRUB_MOBILE : SCRUB;
+        const gapPct = mobile ? GAP_PCT_MOBILE : GAP_PCT;
+
+        // Position cards centered inside the stage
+        cards.forEach((card) => {
+          card.style.position = "absolute";
+          card.style.left = "50%";
+          card.style.top = "50%";
+          card.style.transformStyle = "preserve-3d";
+          card.style.backfaceVisibility = "hidden";
+          card.style.willChange = "transform";
+          card.style.margin = "0";
+        });
+
+        const deckScale = mobile
+          ? 1
+          : Math.min(
+              DECK_SCALE_MAX,
+              Math.max(1, 1 + (vw / DECK_FROM_PX - 1) * DECK_SCALE_GROW)
+            );
+
+        // Measure card widths
+        const widths = cards.map((c) => {
+          const fallbackW = c.classList.contains("card_square") ? 384 : 672;
+          return (c.offsetWidth || fallbackW) * deckScale;
+        });
+        const maxW = Math.max(...widths);
+        const sorted = [...widths].sort((a, b) => a - b);
+        const medW = sorted[Math.floor(sorted.length / 2)] || (mobile ? 320 : 520);
+
+        const wideBonus = (Math.max(0, vw - GAP_FROM_PX) * GAP_GROW_PCT) / 100;
+        const gapFor = (w) =>
+          Math.min(GAP_MAX_PX, Math.max(GAP_MIN_PX, (w * gapPct) / 100 + wideBonus));
+        const gapPx = gapFor(medW);
+
+        const offsets = [0];
+        for (let i = 1; i < cards.length; i++) {
+          const pairW = (widths[i - 1] + widths[i]) / 2;
+          offsets[i] = offsets[i - 1] + pairW + gapPx;
+        }
+        const spanPx = offsets[offsets.length - 1];
+        const travelHalf = (vw + maxW) / 2 + (maxW * 12) / 100;
+
+        const orbitPx = Math.max(ORBIT_MIN_PX, (medW * ORBIT_CARD_PCT) / 100);
+        const perspPx = (medW * PERSP_CARD_PCT) / 100;
+
+        track.style.perspective = `${perspPx}px`;
+
+        gsap.set(cards, {
+          xPercent: -50,
+          yPercent: -50,
+          scale: deckScale,
+          transformOrigin: `50% 50% -${orbitPx}px`,
+          force3D: true,
+        });
+
+        const rotEase = gsap.parseEase(ROT_EASE);
+        const RAD = Math.PI / 180;
+        const rotHalf = (medW * ROT_SPAN_PCT) / 100;
+
+        function rotAt(sx) {
+          let p = (sx + rotHalf) / (rotHalf * 2);
+          p = p < 0 ? 0 : p > 1 ? 1 : p;
+          return ROT_IN + (ROT_OUT - ROT_IN) * rotEase(p);
         }
 
-        // 2. Magnetic Inertia Effect
-        const handleMouseMove = (e) => {
-          const { clientX } = e;
-          if (!cardsWrapper.current) return;
-          const wrapperRect = cardsWrapper.current.getBoundingClientRect();
-          const relX = clientX - wrapperRect.left;
-
-          cards.forEach((card) => {
-            const cardRect = card.getBoundingClientRect();
-            const cardCenterX =
-              cardRect.left + cardRect.width / 2 - wrapperRect.left;
-            const dist = relX - cardCenterX;
-            const maxDist = 350;
-
-            if (Math.abs(dist) < maxDist) {
-              const power = Math.pow(1 - Math.abs(dist) / maxDist, 2) * 45;
-              const direction = dist > 0 ? -1 : 1;
-
-              gsap.to(card, {
-                x: direction * power,
-                duration: 0.8,
-                ease: "power2.out",
-                overwrite: "auto",
-              });
-            } else {
-              gsap.to(card, {
-                x: 0,
-                duration: 1.0,
-                ease: "elastic.out(1, 0.7)",
-                overwrite: "auto",
-              });
-            }
-          });
-        };
-
-        const handleMouseLeave = () => {
-          gsap.to(cards, {
-            x: 0,
-            duration: 1.2,
-            ease: "elastic.out(1, 0.5)",
-            overwrite: "auto",
-          });
-        };
-
-        const wrapper = cardsWrapper.current;
-        if (wrapper) {
-          wrapper.addEventListener("mousemove", handleMouseMove);
-          wrapper.addEventListener("mouseleave", handleMouseLeave);
+        function shrinkAt(sx) {
+          const depth = orbitPx * (1 - Math.cos(rotAt(sx) * RAD));
+          return perspPx / (perspPx + depth);
         }
 
-        return () => {
-          if (wrapper) {
-            wrapper.removeEventListener("mousemove", handleMouseMove);
-            wrapper.removeEventListener("mouseleave", handleMouseLeave);
+        function stretchAt(sx) {
+          return shrinkAt(sx);
+        }
+
+        const STEP = 4;
+        const LIMIT = travelHalf * 1.25;
+
+        function integrate(dir) {
+          const tbl = [0];
+          let s = 0;
+          let guard = 0;
+          while (Math.abs(s) < LIMIT && guard++ < 20000) {
+            s += dir * STEP * stretchAt(s);
+            tbl.push(s);
           }
-        };
-      });
+          return tbl;
+        }
 
-      return () => mm.revert();
+        const sPos = integrate(1);
+        const sNeg = integrate(-1);
+
+        function screenAt(u) {
+          const tbl = u >= 0 ? sPos : sNeg;
+          const k = Math.abs(u) / STEP;
+          const i0 = Math.floor(k);
+          if (i0 >= tbl.length - 1) {
+            const last = tbl.length - 1;
+            const slope = (tbl[last] - tbl[last - 1]) / STEP;
+            return tbl[last] + (Math.abs(u) - last * STEP) * slope;
+          }
+          return tbl[i0] + (tbl[i0 + 1] - tbl[i0]) * (k - i0);
+        }
+
+        function render(head) {
+          for (let j = 0; j < cards.length; j++) {
+            const u = head - offsets[j];
+            const sx = screenAt(u);
+            const rot = rotAt(sx);
+            const f = shrinkAt(sx);
+            cards[j]._x = sx;
+            cards[j]._f = f;
+            cards[j]._r = rot;
+            gsap.set(cards[j], {
+              x: sx / f,
+              rotateX: rot,
+            });
+          }
+          restack();
+        }
+
+        function restack() {
+          const order = [...cards].sort((a, b) => Math.abs(a._x) - Math.abs(b._x));
+          order.forEach((card, rank) => {
+            card.style.zIndex = order.length - rank;
+          });
+        }
+
+        const headStart = 0;
+        const headEnd = spanPx + travelHalf * 0.35;
+        render(headStart);
+
+        // Total vertical scroll required to scrub all project cards
+        const totalScrollDistance = Math.round((headEnd - headStart) * SCROLL_RATIO);
+
+        // Pin the entire Work section so it stays sticky at top:0
+        // for the entire duration of the project cards roll!
+        stInstance = ScrollTrigger.create({
+          trigger: section,
+          start: "top top",
+          end: () => `+=${totalScrollDistance}`,
+          pin: true,
+          pinSpacing: true,
+          scrub: scrubVal,
+          onUpdate: (self) => {
+            const currentHead = headStart + (headEnd - headStart) * self.progress;
+            render(currentHead);
+          },
+          invalidateOnRefresh: true,
+        });
+      }
+
+      build();
+
+      let lastW = window.innerWidth;
+      let rebuildTimer = null;
+      const handleResize = () => {
+        if (window.innerWidth === lastW) return;
+        lastW = window.innerWidth;
+        clearTimeout(rebuildTimer);
+        rebuildTimer = setTimeout(() => {
+          build();
+          ScrollTrigger.refresh();
+        }, 150);
+      };
+
+      window.addEventListener("resize", handleResize);
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+          build();
+          ScrollTrigger.refresh();
+        });
+      }
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+        clearTimeout(rebuildTimer);
+        destroy();
+      };
     },
-    { scope: workContainer }
+    { scope: sectionRef }
   );
 
   return (
     <section
       {...props}
       id="work"
-      ref={workContainer}
-      className={`relative min-h-screen transition-colors duration-500 pb-24 overflow-hidden ${
+      ref={sectionRef}
+      className={`w-full h-screen min-h-screen relative overflow-hidden transition-colors duration-500 select-none flex flex-col justify-between ${
         props.className || ""
-      } ${theme === "light" ? "bg-white" : "bg-brand-yellow"}`}
+      } bg-brand-yellow`}
     >
-      <Header variant="work" triggerRef={workContainer} />
+      <Header variant="work" triggerRef={sectionRef} />
 
-      <div className="w-full h-full flex flex-col items-center pt-32 px-6 md:px-10">
-        <div className="relative z-20 flex flex-col items-center">
-          <span className="block text-sm font-semibold tracking-[0.25em] uppercase text-brand-orange mb-2">
-            work
-          </span>
-          <h3
-            className={`mt-0 font-main font-black text-[clamp(2rem,6vw,3.125rem)] leading-[1.1] lowercase text-center max-w-4xl transition-colors duration-500 ${
-              theme === "light" ? "text-brand-orange" : "text-white"
-            }`}
-          >
-            concepts are written on paper. visualised through code.
-          </h3>
-        </div>
-
-        {/* 4 Cards: Visible ONLY on >= 1200px */}
-        <div
-          ref={cardsWrapper}
-          className="w-full max-w-7xl mt-40 hidden min-[1200px]:flex flex-wrap justify-center gap-6 lg:gap-10 relative z-10"
-        >
-          <ProjectCard
-            categoryKey="figma"
-            activeCard={activeCard}
-            title="figma projects"
-            logo={<FigmaLogo />}
-            bgColor="bg-white"
-            textColor="text-black"
-            rotation="rotate-[-4deg]"
-            projects={CATEGORIES.figma}
-            onProjectClick={handleProjectSelect}
-          />
-          <ProjectCard
-            categoryKey="nextjs"
-            activeCard={activeCard}
-            title="nextjs projects"
-            logo={<NextLogo />}
-            bgColor="bg-black"
-            rotation="rotate-[2deg]"
-            projects={CATEGORIES.nextjs}
-            onProjectClick={handleProjectSelect}
-          />
-          <ProjectCard
-            categoryKey="react"
-            activeCard={activeCard}
-            title="react projects"
-            logo={<ReactLogo />}
-            bgColor="bg-brand-blue"
-            rotation="rotate-[-1deg]"
-            projects={CATEGORIES.react}
-            onProjectClick={handleProjectSelect}
-          />
-          <ProjectCard
-            categoryKey="playground"
-            activeCard={activeCard}
-            title="playground"
-            bgColor="bg-brand-orange"
-            rotation="rotate-[3deg]"
-            projects={CATEGORIES.playground}
-            onProjectClick={handleProjectSelect}
-          />
-        </div>
-
-        <div className="w-full mt-20">{children}</div>
+      {/* Section Title & Caption Header - unified inside the same section at the top */}
+      <div className="w-full pt-8 sm:pt-10 md:pt-12 pb-2 px-6 flex flex-col items-center text-center z-20 shrink-0 pointer-events-none">
+        <span className="block text-xs sm:text-sm font-semibold tracking-[0.25em] uppercase text-brand-orange mb-1.5 sm:mb-2">
+          work
+        </span>
+        <h3 className="mt-0 font-main font-black text-[clamp(1.5rem,3.8vw,2.75rem)] leading-[1.1] lowercase text-center max-w-3xl transition-colors duration-500 text-white">
+          concepts are written on paper. visualised through code.
+        </h3>
       </div>
+
+      {/* 3D Rotating Cards Viewport Track - inside the same section with full stage freedom */}
+      <div
+        ref={trackRef}
+        className="relative flex-1 w-full h-full flex items-center justify-center pointer-events-auto overflow-visible"
+      >
+        {CARD_CONFIGS.map((cfg) => {
+          const project = PROJECTS.find((p) => p.id === cfg.id);
+          if (!project) return null;
+
+          const isLandscape = cfg.variant === "landscape";
+
+          return (
+            <div
+              key={project.id}
+              onClick={(e) => handleProjectSelect(project, e)}
+              className={`testi_3d_card ${
+                isLandscape
+                  ? "card_landscape w-[88vw] sm:w-[34rem] md:w-[42rem]"
+                  : "card_square w-[85vw] sm:w-[21rem] md:w-[24rem]"
+              } h-[21.5rem] sm:h-[22.5rem] rounded-[2rem] border p-5 sm:p-6 flex flex-col justify-between shadow-2xl transition-shadow duration-300 hover:shadow-black/25 cursor-pointer ${
+                cfg.containerBg
+              }`}
+            >
+              {/* Top Badge & Header */}
+              <div className="flex items-center justify-between gap-4 z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center p-2 bg-black/5 dark:bg-white/10 shadow-sm shrink-0">
+                    {getCategoryLogo(project.category)}
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-mono uppercase tracking-widest opacity-60 font-bold">
+                      {project.categoryLabel}
+                    </div>
+                    <h4 className="font-main font-black text-base sm:text-lg leading-tight tracking-tight">
+                      {project.title}
+                    </h4>
+                  </div>
+                </div>
+
+                <span
+                  className={`px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider shrink-0 ${cfg.badgeBg}`}
+                >
+                  {project.category}
+                </span>
+              </div>
+
+              {/* Middle Content */}
+              {isLandscape ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 my-auto items-center z-10">
+                  {/* Left Quote */}
+                  <div className="flex flex-col justify-center">
+                    <p className="font-main font-bold text-sm sm:text-base leading-snug tracking-tight opacity-90 mb-2 sm:mb-2.5 line-clamp-3">
+                      “{project.summary}”
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {project.stack.slice(0, 3).map((st, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-[10px] sm:text-[11px] font-mono font-medium opacity-75"
+                        >
+                          {st}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right Visual Frame & Stats */}
+                  <div className="flex flex-col gap-2">
+                    <div className="w-full aspect-[16/8] sm:aspect-[16/8.5] rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 p-2.5 flex flex-col justify-between relative overflow-hidden shadow-inner">
+                      <div className="flex items-center justify-between text-[10px] font-mono opacity-50">
+                        <span>INTERFACE // 0{cfg.id.length}</span>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      </div>
+                      <div className="my-auto text-center font-main font-black text-base sm:text-lg tracking-tight opacity-80 line-clamp-1">
+                        {project.title}
+                      </div>
+                      <div className="text-[9px] font-mono uppercase tracking-widest opacity-40 text-right">
+                        Active Interface
+                      </div>
+                    </div>
+
+                    {/* Stat Tiles */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {cfg.stat1 && (
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
+                          <div className="font-main font-black text-base leading-none">
+                            {cfg.stat1.value}
+                          </div>
+                          <div className="text-[9px] sm:text-[10px] font-mono opacity-60 leading-tight mt-0.5">
+                            {cfg.stat1.label}
+                          </div>
+                        </div>
+                      )}
+                      {cfg.stat2 && (
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
+                          <div className="font-main font-black text-base leading-none">
+                            {cfg.stat2.value}
+                          </div>
+                          <div className="text-[9px] sm:text-[10px] font-mono opacity-60 leading-tight mt-0.5">
+                            {cfg.stat2.label}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Square Card Body */
+                <div className="my-auto flex flex-col justify-between gap-3 z-10">
+                  <p className="font-main font-bold text-sm sm:text-base leading-snug tracking-tight opacity-90 line-clamp-3">
+                    “{project.summary}”
+                  </p>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap gap-1.5">
+                      {project.stack.slice(0, 3).map((st, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-[10px] sm:text-[11px] font-mono font-medium opacity-75"
+                        >
+                          {st}
+                        </span>
+                      ))}
+                    </div>
+
+                    {cfg.stat1 && (
+                      <div className="p-2 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-between">
+                        <span className="font-main font-black text-lg leading-none">
+                          {cfg.stat1.value}
+                        </span>
+                        <span className="text-[10px] font-mono opacity-60 text-right max-w-[130px]">
+                          {cfg.stat1.label}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom CTA Row */}
+              <div className="flex items-center justify-between pt-2 border-t border-black/10 dark:border-white/10 z-10">
+                <div className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest opacity-50">
+                  CASE STUDY // {project.id}
+                </div>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleProjectSelect(project, e);
+                  }}
+                  className={`group/btn inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full font-main font-bold text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-300 shadow-md ${cfg.btnClass}`}
+                >
+                  <span>Read Details</span>
+                  <span className="transition-transform duration-300 group-hover/btn:translate-x-1">
+                    <ArrowRightIcon />
+                  </span>
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {children}
     </section>
   );
 };

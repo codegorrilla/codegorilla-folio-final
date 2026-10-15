@@ -1,6 +1,5 @@
 "use client";
 import React, { useRef, useEffect } from "react";
-import { useTheme } from "@/hooks/useTheme";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -40,28 +39,12 @@ const logoPaths = {
   },
 };
 
-const PHYSICS_TAGS = [
-  "HTML", "CSS", "JavaScript", "TypeScript", "GSAP", "Lenis",
-  "React", "Next.js", "TanStack", "Redux", "Node.js",
-  "Express", "MongoDB", "Git", "Figma",
-];
-
-const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
-
 const FooterPage = ({ children, triggerRef, ...props }) => {
-  const { theme } = useTheme();
   const footerRef = useRef(null);
-  const objectContainerRef = useRef(null);
-  const physicsInitialized = useRef(false);
-  const engineRef = useRef(null);
-  const runnerRef = useRef(null);
-  const rafRef = useRef(null);
   const morphTlRef = useRef(null);
 
   // ── MorphSVG: dynamic import to avoid SSR ──────────────────────────────────
   useEffect(() => {
-    let st = null;
-
     const setupMorph = async () => {
       // Dynamic import keeps MorphSVGPlugin out of the SSR bundle
       const { MorphSVGPlugin } = await import("gsap/MorphSVGPlugin");
@@ -105,187 +88,16 @@ const FooterPage = ({ children, triggerRef, ...props }) => {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Matter.js: dynamic import, trigger on scroll enter ────────────────────
-  useEffect(() => {
-    const container = objectContainerRef.current;
-    if (!container) return;
-
-    const triggerEl = triggerRef?.current ?? footerRef.current;
-
-    const st = ScrollTrigger.create({
-      trigger: triggerEl,
-      start: "top bottom",
-      once: true,
-      onEnter: () => {
-        if (physicsInitialized.current) return;
-        physicsInitialized.current = true;
-        initPhysics(container);
-      },
-    });
-
-    return () => {
-      st.kill();
-      cleanupPhysics();
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const cleanupPhysics = () => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    if (runnerRef.current) {
-      import("matter-js").then(({ default: Matter }) => {
-        Matter.Runner.stop(runnerRef.current);
-        if (engineRef.current) Matter.Engine.clear(engineRef.current);
-      });
-    }
-  };
-
-  const initPhysics = async (container) => {
-    // Dynamic import — Matter.js uses browser APIs, cannot run on server
-    const Matter = (await import("matter-js")).default;
-
-    const rect = container.getBoundingClientRect();
-    const T = 200;
-
-    const engine = Matter.Engine.create();
-    engine.gravity = { x: 0, y: 1 };
-    engineRef.current = engine;
-
-    // Boundary walls: floor, left, right
-    const walls = [
-      Matter.Bodies.rectangle(rect.width / 2, rect.height + T / 2, rect.width + T * 2, T, { isStatic: true }),
-      Matter.Bodies.rectangle(-T / 2, rect.height / 2, T, rect.height + T * 2, { isStatic: true }),
-      Matter.Bodies.rectangle(rect.width + T / 2, rect.height / 2, T, rect.height + T * 2, { isStatic: true }),
-    ];
-    Matter.World.add(engine.world, walls);
-
-    // Add ceiling after 3s to cap the simulation
-    setTimeout(() => {
-      const ceiling = Matter.Bodies.rectangle(rect.width / 2, -T / 2, rect.width + T * 2, T, { isStatic: true });
-      Matter.World.add(engine.world, ceiling);
-    }, 3000);
-
-    // Build a physics body for each tag element
-    const tagEls = container.querySelectorAll(".physics-tag");
-    const bodies = [];
-
-    tagEls.forEach((el, i) => {
-      const elRect = el.getBoundingClientRect();
-      const startX = Math.random() * (rect.width - elRect.width) + elRect.width / 2;
-      const startY = -220 - i * 90;
-      const body = Matter.Bodies.rectangle(startX, startY, elRect.width, elRect.height, {
-        restitution: 0.45,
-        friction: 0.15,
-        frictionAir: 0.022,
-        density: 0.002,
-        chamfer: { radius: 40 },
-      });
-      Matter.Body.setAngle(body, (Math.random() - 0.5) * Math.PI);
-      bodies.push({ body, el, w: elRect.width, h: elRect.height });
-      Matter.World.add(engine.world, body);
-    });
-
-    // Mouse interaction
-    const mouse = Matter.Mouse.create(container);
-    mouse.element.removeEventListener("mousewheel", mouse.mousewheel);
-    mouse.element.removeEventListener("DOMMouseScroll", mouse.mousewheel);
-
-    const mouseConstraint = Matter.MouseConstraint.create(engine, {
-      mouse,
-      constraint: { stiffness: 0.6, render: { visible: false } },
-    });
-
-    let dragging = null;
-    let origInertia = null;
-
-    Matter.Events.on(mouseConstraint, "startdrag", (e) => {
-      dragging = e.body;
-      if (dragging) {
-        origInertia = dragging.inertia;
-        Matter.Body.setInertia(dragging, Infinity);
-        Matter.Body.setVelocity(dragging, { x: 0, y: 0 });
-        Matter.Body.setAngularVelocity(dragging, 0);
-      }
-    });
-    Matter.Events.on(mouseConstraint, "enddrag", () => {
-      if (dragging) {
-        Matter.Body.setInertia(dragging, origInertia || 1);
-        dragging = null;
-      }
-    });
-    Matter.Events.on(engine, "beforeUpdate", () => {
-      if (!dragging) return;
-      const found = bodies.find((b) => b.body === dragging);
-      if (!found) return;
-      Matter.Body.setPosition(dragging, {
-        x: clamp(dragging.position.x, found.w / 2, rect.width - found.w / 2),
-        y: clamp(dragging.position.y, found.h / 2, rect.height - found.h / 2),
-      });
-      Matter.Body.setVelocity(dragging, {
-        x: clamp(dragging.velocity.x, -20, 20),
-        y: clamp(dragging.velocity.y, -20, 20),
-      });
-    });
-
-    container.addEventListener("mouseleave", () => {
-      mouseConstraint.constraint.bodyB = null;
-      mouseConstraint.constraint.pointB = null;
-    });
-    document.addEventListener("mouseup", () => {
-      mouseConstraint.constraint.bodyB = null;
-      mouseConstraint.constraint.pointB = null;
-    });
-
-    Matter.World.add(engine.world, mouseConstraint);
-
-    const runner = Matter.Runner.create();
-    runnerRef.current = runner;
-    Matter.Runner.run(runner, engine);
-
-    // RAF loop syncs Matter body positions → DOM elements
-    const tick = () => {
-      bodies.forEach(({ body, el, w, h }) => {
-        const x = clamp(body.position.x - w / 2, 0, rect.width - w);
-        const y = clamp(body.position.y - h / 2, -h * 2, rect.height - h);
-        el.style.left = `${x}px`;
-        el.style.top = `${y}px`;
-        el.style.transform = `rotate(${body.angle}rad)`;
-      });
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    tick();
-  };
-
-  const isDark = theme !== "light";
-
   return (
     <footer
       {...props}
       ref={footerRef}
       className={`fixed bottom-0 left-0 w-full h-screen -z-10 flex flex-col justify-end transition-colors duration-500 overflow-hidden ${
         props.className || ""
-      } ${isDark ? "bg-brand-blue" : "bg-white"}`}
+      } bg-brand-blue`}
     >
-      {/* Physics tags container — absolute fill, pointer-events delegated per-tag */}
-      <div
-        ref={objectContainerRef}
-        className="absolute inset-0"
-        style={{ pointerEvents: "none" }}
-      >
-        {PHYSICS_TAGS.map((tag) => (
-          <div
-            key={tag}
-            className={`physics-tag absolute font-main font-semibold text-sm px-6 py-3 rounded-full cursor-grab active:cursor-grabbing select-none z-10 whitespace-nowrap ${
-              isDark ? "bg-brand-yellow text-black" : "bg-brand-orange text-white"
-            }`}
-            style={{ pointerEvents: "auto" }}
-          >
-            {tag}
-          </div>
-        ))}
-      </div>
-
       {/* SVG morph logo — scroll-scrubbed bent→normal */}
-      <div className={`relative z-10 w-full px-6 md:px-10 pb-6 ${isDark ? "text-white" : "text-brand-orange"}`}>
+      <div className="relative z-10 w-full px-6 md:px-10 pb-6 text-white">
         <svg
           width="1813"
           height="256"
@@ -312,10 +124,8 @@ const FooterPage = ({ children, triggerRef, ...props }) => {
           </g>
         </svg>
 
-        <p className={`text-xs font-mono mt-4 opacity-40 text-center tracking-widest uppercase ${
-          isDark ? "text-white" : "text-black"
-        }`}>
-          Development made with GSAP · Lenis · Matter.js · Next.js
+        <p className="text-xs font-mono mt-4 opacity-40 text-center tracking-widest uppercase text-white">
+          Development made with GSAP · Lenis · Next.js
         </p>
       </div>
 

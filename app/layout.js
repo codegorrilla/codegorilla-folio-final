@@ -2,7 +2,6 @@ import localFont from "next/font/local";
 import { Erica_One } from "next/font/google";
 import CustomCursor from "@/components/ui/CustomCursor";
 import VerticalCurtainTransition from "@/components/anim/VerticalCurtainTransition";
-import { ThemeProvider } from "@/provider/ThemeProvider";
 
 const ericaOne = Erica_One({
   weight: ["400"], // Must specify weights for non-variable fonts
@@ -57,11 +56,9 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
-        <ThemeProvider>
-          <CustomCursor />
-          <VerticalCurtainTransition />
-          {children}
-        </ThemeProvider>
+        <CustomCursor />
+        <VerticalCurtainTransition />
+        {children}
       </body>
     </html>
   );

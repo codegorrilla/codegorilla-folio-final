@@ -5,7 +5,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { useLenis } from "lenis/react";
 import SvgIcon from "./SvgIcon";
-import { useTheme } from "@/hooks/useTheme";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -17,7 +16,6 @@ const FloatingDock = () => {
   // State for toggles and progress
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isAudioOn, setIsAudioOn] = useState(true);
-  const { theme, toggleTheme } = useTheme();
 
   useGSAP(() => {
     const dock = dockRef.current;
@@ -210,77 +208,10 @@ const FloatingDock = () => {
           />
         </a>
 
-        {/* 4. Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="w-9 h-9 flex items-center justify-center cursor-none hover-trigger text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
-          aria-label="Toggle theme"
-        >
-          <div className="relative w-4 h-4 flex items-center justify-center">
-            {/* Dark Theme (Moon) */}
-            <span
-              className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-              style={{
-                transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-                opacity: theme === "dark" ? 1 : 0,
-                transform:
-                  theme === "dark"
-                    ? "translateY(0) scale(1)"
-                    : "translateY(100%) scale(0.5)",
-                pointerEvents: theme === "dark" ? "auto" : "none",
-              }}
-            >
-              <svg
-                className="w-4 h-4 fill-none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-              </svg>
-            </span>
-
-            {/* Light Theme (Sun) */}
-            <span
-              className="absolute inset-0 flex items-center justify-center transition-all duration-500"
-              style={{
-                transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-                opacity: theme === "light" ? 1 : 0,
-                transform:
-                  theme === "light"
-                    ? "translateY(0) scale(1)"
-                    : "translateY(-100%) scale(0.5)",
-                pointerEvents: theme === "light" ? "auto" : "none",
-              }}
-            >
-              <svg
-                className="w-4 h-4 fill-none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="5"></circle>
-                <line x1="12" y1="1" x2="12" y2="3"></line>
-                <line x1="12" y1="21" x2="12" y2="23"></line>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                <line x1="1" y1="12" x2="3" y2="12"></line>
-                <line x1="21" y1="12" x2="23" y2="12"></line>
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-              </svg>
-            </span>
-          </div>
-        </button>
-
         {/* Divider */}
         <div className="w-px h-5 bg-white/20 mx-1" />
 
-        {/* 5. Resume Link */}
+        {/* 4. Resume Link */}
         <a
           href="/resume.pdf"
           target="_blank"
