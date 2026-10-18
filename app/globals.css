@@ -115,3 +115,38 @@ body {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
+
+/* ── Caption Gradient Fill Text Rows ───────────────────────────────────── */
+.caption-fill-row {
+  display: block;
+  padding-bottom: 0.22em;
+  padding-top: 0.05em;
+  color: var(--color-brand-yellow, #ffbf00);
+}
+
+@media (min-width: 992px) {
+  .caption-fill-row {
+    background-image: linear-gradient(
+      90deg,
+      #ffbf00 0%,
+      #ffbf00 32%,
+      #e8aa00 39%,
+      #bf8b00 47%,
+      #70540d 55%,
+      #333333 63%,
+      #333333 100%
+    );
+    background-size: 300% 100%;
+    background-position: 100% 0%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: -webkit-text-fill-color 0.2s ease;
+  }
+
+  .caption-fill-row:hover {
+    -webkit-text-fill-color: #ffffff !important;
+    color: #ffffff !important;
+  }
+}

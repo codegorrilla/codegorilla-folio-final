@@ -8,18 +8,18 @@ import ProfilePic from "@/assets/profile-pic.png";
 const config = {
   symbols: ["S", "A", "N", "J", "I", "B"],
   blockSize: 28,
-  detectionRadius: 40,   // ↓ was 55 — smaller trigger footprint
-  clusterSize: 2,        // ↓ was 5 — fewer neighbour blocks activate per event
+  detectionRadius: 45,
+  clusterSize: 3,
   blockLifetime: 320,
-  emptyRatio: 0.55,      // ↑ was 0.30 — more blank cells, less text density
-  scrambleRatio: 0.15,   // ↓ was 0.28 — fewer cells cycle through symbols
+  emptyRatio: 0.55,
+  scrambleRatio: 0.15,
   scrambleInterval: 140,
 };
 
 const getRandomSymbol = () =>
   config.symbols[Math.floor(Math.random() * config.symbols.length)];
 
-// ── Imperative grid logic (ported 1-to-1 from reference JS) ──────────────────
+// ── Imperative grid logic ────────────────────────────────────────────────────
 function initGridOverlay(element) {
   const gridOverlay = document.createElement("div");
   gridOverlay.style.cssText = `
@@ -170,7 +170,7 @@ function initGridOverlay(element) {
 }
 
 // ── React component ───────────────────────────────────────────────────────────
-export const ScrambleHoverEffect = () => {
+export const ScrambleHoverEffect = ({ className = "w-[600px] h-[550px]" }) => {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -206,14 +206,20 @@ export const ScrambleHoverEffect = () => {
   return (
     <div
       ref={containerRef}
-      className="relative w-full rounded-2xl overflow-hidden cursor-crosshair"
+      className={`relative rounded-3xl overflow-hidden cursor-crosshair shadow-[0_25px_60px_rgba(0,0,0,0.7)] flex items-center justify-center bg-[#15171b] ${className}`}
     >
+      {/* 
+        Inside Profile Image:
+        Fills the 600x550px profile card edge-to-edge with object-cover,
+        eliminating empty white space, with NO border.
+      */}
       <Image
         src={ProfilePic}
         alt="Profile picture"
-        width={420}
-        height={560}
-        className="w-full h-auto block rounded-2xl"
+        fill
+        sizes="600px"
+        className="w-full h-full object-cover object-center block rounded-3xl select-none pointer-events-none"
+        priority
       />
     </div>
   );

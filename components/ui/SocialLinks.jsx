@@ -29,13 +29,6 @@ const SOCIALS = [
     color: "#1769FF",
   },
   {
-    key: "instagram",
-    label: "Instagram",
-    href: "https://instagram.com/yourusername",
-    src: "/social_icons/instagram.svg",
-    color: "#E4405F",
-  },
-  {
     key: "discord",
     label: "Discord",
     href: "https://discord.com/users/yourusername",
@@ -61,14 +54,10 @@ const SocialLinks = () => {
             target={href.startsWith("mailto") ? undefined : "_blank"}
             rel="noopener noreferrer"
             aria-label={label}
-            // Custom cursor: show label pill in the platform's brand color
-            data-label={label}
-            data-cursor-color={color}
             className="
               group block
               opacity-40 hover:opacity-100
               transition-opacity duration-300 ease-out
-              cursor-none
             "
           >
             <SvgIcon

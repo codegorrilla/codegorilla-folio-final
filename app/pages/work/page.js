@@ -193,10 +193,50 @@ const CARD_CONFIGS = [
   },
 ];
 
+const SCRAMBLE_CHARS = "!<>-_\\/[]{}—=+*^?#_0101";
+
+// High performance deterministic scramble text helper
+const scrambleText = (el, targetText, duration = 650) => {
+  if (!el || !targetText) return;
+  if (el._scrambleTimer) clearInterval(el._scrambleTimer);
+
+  const length = targetText.length;
+  const startTime = Date.now();
+
+  el._scrambleTimer = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(1, elapsed / duration);
+    const revealedCount = Math.floor(progress * length);
+
+    let output = "";
+    for (let i = 0; i < length; i++) {
+      const char = targetText[i];
+      if (char === " " || char === "." || char === "\n") {
+        output += char;
+      } else if (i < revealedCount) {
+        output += char;
+      } else {
+        output +=
+          SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+      }
+    }
+
+    el.textContent = output;
+
+    if (progress >= 1) {
+      clearInterval(el._scrambleTimer);
+      el._scrambleTimer = null;
+      el.textContent = targetText;
+    }
+  }, 22);
+};
+
 const WorkPage = ({ children, ...props }) => {
   const router = useRouter();
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
+  const captionPart1Ref = useRef(null);
+  const captionPart2Ref = useRef(null);
 
   const handleProjectSelect = (project, event) => {
     navigateWithVerticalCurtain(
@@ -433,10 +473,39 @@ const WorkPage = ({ children, ...props }) => {
         });
       }
 
+      // ── Scramble on scroll into work section ──────────────────────────────
+      const triggerScramble = () => {
+        scrambleText(
+          captionPart1Ref.current,
+          "concepts are written on paper.",
+          700
+        );
+        setTimeout(() => {
+          scrambleText(
+            captionPart2Ref.current,
+            "visualised through code.",
+            700
+          );
+        }, 140);
+      };
+
+      ScrollTrigger.create({
+        trigger: section,
+        start: "top 75%",
+        onEnter: triggerScramble,
+        onEnterBack: triggerScramble,
+      });
+
       return () => {
         window.removeEventListener("resize", handleResize);
         clearTimeout(rebuildTimer);
         destroy();
+        if (captionPart1Ref.current?._scrambleTimer) {
+          clearInterval(captionPart1Ref.current._scrambleTimer);
+        }
+        if (captionPart2Ref.current?._scrambleTimer) {
+          clearInterval(captionPart2Ref.current._scrambleTimer);
+        }
       };
     },
     { scope: sectionRef }
@@ -455,11 +524,36 @@ const WorkPage = ({ children, ...props }) => {
 
       {/* Section Title & Caption Header - unified inside the same section at the top */}
       <div className="w-full pt-8 sm:pt-10 md:pt-12 pb-2 px-6 flex flex-col items-center text-center z-20 shrink-0 pointer-events-none">
-        <span className="block text-xs sm:text-sm font-semibold tracking-[0.25em] uppercase text-brand-orange mb-1.5 sm:mb-2">
+        <span className="block text-xs sm:text-sm font-semibold tracking-[0.25em] uppercase text-brand-orange mb-1.5 sm:mb-2 pointer-events-auto">
           work
         </span>
-        <h3 className="mt-0 font-main font-black text-[clamp(1.5rem,3.8vw,2.75rem)] leading-[1.1] lowercase text-center max-w-3xl transition-colors duration-500 text-white">
-          concepts are written on paper. visualised through code.
+        <h3 className="mt-0 font-main font-black text-[clamp(1.5rem,3.8vw,2.75rem)] leading-[1.1] lowercase text-center max-w-3xl text-white pointer-events-auto select-none">
+          <span
+            ref={captionPart1Ref}
+            onMouseEnter={() =>
+              scrambleText(
+                captionPart1Ref.current,
+                "concepts are written on paper.",
+                600
+              )
+            }
+            className="inline-block cursor-pointer transition-colors duration-200 hover:text-brand-orange"
+          >
+            concepts are written on paper.
+          </span>{" "}
+          <span
+            ref={captionPart2Ref}
+            onMouseEnter={() =>
+              scrambleText(
+                captionPart2Ref.current,
+                "visualised through code.",
+                600
+              )
+            }
+            className="inline-block cursor-pointer transition-colors duration-200 hover:text-brand-orange"
+          >
+            visualised through code.
+          </span>
         </h3>
       </div>
 

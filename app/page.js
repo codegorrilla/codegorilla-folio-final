@@ -70,7 +70,6 @@ const Home = () => {
       }} />
       <StickyCards />
       <FloatingDock />
-      <footer className="w-full min-h-134.5">footer</footer>
     </>
   );
 };

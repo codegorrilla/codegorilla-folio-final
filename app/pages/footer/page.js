@@ -92,19 +92,19 @@ const FooterPage = ({ children, triggerRef, ...props }) => {
     <footer
       {...props}
       ref={footerRef}
-      className={`fixed bottom-0 left-0 w-full h-screen -z-10 flex flex-col justify-end transition-colors duration-500 overflow-hidden ${
+      className={`relative w-full z-10 flex flex-col items-center justify-center transition-colors duration-500 overflow-hidden bg-brand-blue pt-[100px] pb-[100px] ${
         props.className || ""
-      } bg-brand-blue`}
+      }`}
     >
       {/* SVG morph logo — scroll-scrubbed bent→normal */}
-      <div className="relative z-10 w-full px-6 md:px-10 pb-6 text-white">
+      <div className="relative z-10 w-full px-6 md:px-10 lg:px-16 text-white flex flex-col items-center">
         <svg
           width="1813"
           height="256"
           viewBox="0 0 1813 256"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full"
+          className="w-full max-w-7xl"
           aria-label="code.gorrilla"
         >
           <g id="code-gorrilla-logo">
@@ -129,7 +129,7 @@ const FooterPage = ({ children, triggerRef, ...props }) => {
         </p>
       </div>
 
-      <div className="w-full px-10">{children}</div>
+      {children && <div className="w-full px-10">{children}</div>}
     </footer>
   );
 };

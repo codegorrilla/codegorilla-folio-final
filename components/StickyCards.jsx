@@ -15,7 +15,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 const StickyCards = () => {
   const container = useRef(null);
-  const sentinelRef = useRef(null);
 
   useGSAP(
     () => {
@@ -70,7 +69,7 @@ const StickyCards = () => {
       <HeroPage className="w-full min-h-screen rounded-0 lg:rounded-t-2xl relative flex flex-col justify-center items-center bg-brand-blue pt-4 overflow-hidden sticky-card z-[1]" />
 
       <AboutPage
-        className="w-full min-h-screen rounded-0 lg:rounded-t-2xl flex gap-3 p-6 md:p-10 lg:p-20 relative transition-colors duration-500 will-change-transform sticky-card z-[2] bg-brand-dark text-white"
+        className="w-full min-h-screen rounded-0 lg:rounded-t-2xl flex flex-col p-6 sm:p-8 md:p-12 xl:p-14 relative transition-colors duration-500 will-change-transform sticky-card z-[2] bg-brand-dark text-white overflow-hidden"
       >
         <TextGradientFill />
       </AboutPage>
@@ -83,21 +82,13 @@ const StickyCards = () => {
         animation enough room to complete before Work slides in.
         Adjust height to control fill speed (taller = slower fill).
       */}
-      <div aria-hidden="true" className="hidden min-[1200px]:block h-[3000px]" />
+      <div aria-hidden="true" className="hidden min-[992px]:block h-[2600px]" />
 
       <WorkPage
         className="w-full relative will-change-transform sticky-card z-[3] bg-brand-yellow text-white"
       ></WorkPage>
 
-      {/* 
-        Final spacer to reveal the footer. 
-        As we scroll this distance, the pinned cards will eventually unpin 
-        or the container will finish, revealing the 'fixed' footer behind.
-        Also used as the ScrollTrigger target for footer animations.
-      */}
-      <div ref={sentinelRef} aria-hidden="true" className="h-screen w-full pointer-events-none" />
-
-      <FooterPage className="flex gap-3 p-6 md:p-10 lg:p-20 text-white" triggerRef={sentinelRef}></FooterPage>
+      <FooterPage />
     </section>
   );
 };
