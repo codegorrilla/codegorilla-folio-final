@@ -124,8 +124,21 @@ body {
   color: var(--color-brand-yellow, #ffbf00);
 }
 
+.caption-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.caption-char {
+  display: inline-block;
+}
+
 @media (min-width: 992px) {
   .caption-fill-row {
+    color: transparent;
+  }
+
+  .caption-char {
     background-image: linear-gradient(
       90deg,
       #ffbf00 0%,
@@ -136,17 +149,26 @@ body {
       #333333 63%,
       #333333 100%
     );
-    background-size: 300% 100%;
-    background-position: 100% 0%;
+    background-size: calc(var(--row-w, 1200px) * 3) 100%;
+    background-position: calc(
+      (var(--sweep, 0) - 1) * 2 * var(--row-w, 1200px) - var(--char-x, 0px)
+    ) 0;
     background-repeat: no-repeat;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    transition: -webkit-text-fill-color 0.2s ease;
+    opacity: 1;
+    transition: opacity 0.28s cubic-bezier(0.25, 1, 0.5, 1), -webkit-text-fill-color 0.2s ease;
+    will-change: opacity;
   }
 
-  .caption-fill-row:hover {
+  .caption-char.is-overlapping {
+    opacity: 0.3 !important;
+  }
+
+  .caption-fill-row:hover .caption-char {
     -webkit-text-fill-color: #ffffff !important;
     color: #ffffff !important;
   }
 }
+

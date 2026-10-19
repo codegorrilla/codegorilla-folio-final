@@ -12,11 +12,12 @@ gsap.registerPlugin(ScrollTrigger);
 
 const SCRAMBLE_CHARS = "!<>-_\\/[]{}—=+*^?#_0101";
 
-// High performance deterministic scramble text helper
+// High performance deterministic scramble text helper (mutates spans in-place to preserve collision classes)
 const scrambleText = (el, targetText, duration = 650) => {
   if (!el || !targetText) return;
   if (el._scrambleTimer) clearInterval(el._scrambleTimer);
 
+  const charSpans = el.querySelectorAll(".caption-char");
   const length = targetText.length;
   const startTime = Date.now();
 
@@ -25,27 +26,69 @@ const scrambleText = (el, targetText, duration = 650) => {
     const progress = Math.min(1, elapsed / duration);
     const revealedCount = Math.floor(progress * length);
 
-    let output = "";
-    for (let i = 0; i < length; i++) {
-      const char = targetText[i];
-      if (char === " " || char === "." || char === "\n") {
-        output += char;
-      } else if (i < revealedCount) {
-        output += char;
-      } else {
-        output +=
-          SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+    if (charSpans.length === length) {
+      for (let i = 0; i < length; i++) {
+        const char = targetText[i];
+        if (char === " ") {
+          charSpans[i].textContent = "\u00A0";
+        } else if (char === "." || char === "\n") {
+          charSpans[i].textContent = char;
+        } else if (i < revealedCount) {
+          charSpans[i].textContent = char;
+        } else {
+          charSpans[i].textContent =
+            SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+        }
       }
+    } else {
+      let output = "";
+      for (let i = 0; i < length; i++) {
+        const char = targetText[i];
+        if (char === " " || char === "." || char === "\n") {
+          output += char;
+        } else if (i < revealedCount) {
+          output += char;
+        } else {
+          output +=
+            SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+        }
+      }
+      el.textContent = output;
     }
-
-    el.textContent = output;
 
     if (progress >= 1) {
       clearInterval(el._scrambleTimer);
       el._scrambleTimer = null;
-      el.textContent = targetText;
+      if (charSpans.length === length) {
+        for (let i = 0; i < length; i++) {
+          charSpans[i].textContent = targetText[i] === " " ? "\u00A0" : targetText[i];
+        }
+      } else {
+        el.textContent = targetText;
+      }
     }
   }, 22);
+};
+
+// Helper to render caption line split into words and characters with 1:1 character index tracking
+const renderCaptionChars = (text) => {
+  const words = text.split(" ");
+  return words.map((word, wIdx) => (
+    <React.Fragment key={wIdx}>
+      <span className="caption-word inline-block whitespace-nowrap">
+        {Array.from(word).map((char, cIdx) => (
+          <span key={cIdx} className="caption-char inline-block">
+            {char}
+          </span>
+        ))}
+      </span>
+      {wIdx < words.length - 1 && (
+        <span className="caption-char caption-space inline-block">
+          {"\u00A0"}
+        </span>
+      )}
+    </React.Fragment>
+  ));
 };
 
 export const TextGradientFill = () => {
@@ -91,9 +134,17 @@ export const TextGradientFill = () => {
 
       // Desktop / screens >= 992px: card pinning, bottom entrance, and sticky gradient fill
       mm.add("(min-width: 992px)", () => {
-        // Initial state for desktop: #333 text (backgroundPosition at 100% 0%)
+        // Initial state for desktop: measure row & char offsets, set #333 text (--sweep: 0)
         lines.forEach((line) => {
-          line.style.backgroundPosition = "100% 0%";
+          const lineRect = line.getBoundingClientRect();
+          line.style.setProperty("--row-w", `${lineRect.width}px`);
+          line.style.setProperty("--sweep", "0");
+          const charSpans = line.querySelectorAll(".caption-char");
+          charSpans.forEach((span) => {
+            const sRect = span.getBoundingClientRect();
+            const charX = sRect.left - lineRect.left;
+            span.style.setProperty("--char-x", `${charX}px`);
+          });
         });
 
         // 1. Entrance: as user scrolls into About section, rows appear from bottom staggered in #333
@@ -125,14 +176,21 @@ export const TextGradientFill = () => {
           },
         });
 
-        lines.forEach((line) => {
+        const sweepProgress = { l0: 0, l1: 0, l2: 0, l3: 0 };
+        const keys = ["l0", "l1", "l2", "l3"];
+
+        lines.forEach((line, idx) => {
+          const key = keys[idx];
           fillTl.fromTo(
-            line,
-            { backgroundPosition: "100% 0%" },
+            sweepProgress,
+            { [key]: 0 },
             {
-              backgroundPosition: "0% 0%",
+              [key]: 1,
               ease: "none",
               duration: 1,
+              onUpdate: () => {
+                line.style.setProperty("--sweep", sweepProgress[key]);
+              },
             },
             "+=0.15"
           );
@@ -142,7 +200,8 @@ export const TextGradientFill = () => {
       // Mobile / tablets < 992px: NO text animation! Sits naturally centered in solid yellow
       mm.add("(max-width: 991px)", () => {
         lines.forEach((line) => {
-          line.style.backgroundPosition = "";
+          line.style.removeProperty("--sweep");
+          line.style.removeProperty("--row-w");
         });
         gsap.set(lines, { clearProps: "all" });
       });
@@ -169,7 +228,7 @@ export const TextGradientFill = () => {
     { scope: containerRef }
   );
 
-  // ── GSAP Magnetic Repel for Profile Card + Parallax for 'My Story' Button ──────
+  // ── GSAP Magnetic Repel for Profile Card + Character Overlap Collision Engine ──
   useEffect(() => {
     const container = containerRef.current;
     const card = profileCardRef.current;
@@ -177,79 +236,209 @@ export const TextGradientFill = () => {
     const btn = myStoryBtnRef.current;
     if (!container || !card || !btn) return;
 
+    // Set initial stylish tilts on profile card and 'My Story' button
+    gsap.set(card, { rotation: -2.5 });
+    gsap.set(btn, { rotation: 3.5 });
+
     // quickTo for Card (prominent repelling magnetic motion)
     const cardXTo = gsap.quickTo(card, "x", { duration: 0.8, ease: "power3.out" });
     const cardYTo = gsap.quickTo(card, "y", { duration: 0.8, ease: "power3.out" });
 
-    // quickTo for Button Anchor (moves with card to stay anchored at bottom-center-right)
-    const anchorXTo = anchor
-      ? gsap.quickTo(anchor, "x", { duration: 0.8, ease: "power3.out" })
-      : null;
-    const anchorYTo = anchor
-      ? gsap.quickTo(anchor, "y", { duration: 0.8, ease: "power3.out" })
-      : null;
+    // Ensure button anchor stays completely stationary in resting position
+    if (anchor) {
+      gsap.set(anchor, { clearProps: "all" });
+    }
 
-    // quickTo for Button (independent parallax foreground layer)
-    const btnXTo = gsap.quickTo(btn, "x", { duration: 0.5, ease: "power3.out" });
-    const btnYTo = gsap.quickTo(btn, "y", { duration: 0.5, ease: "power3.out" });
+    // quickTo for Button (subtle tactile magnetic micro-pull, not repelled)
+    const btnXTo = gsap.quickTo(btn, "x", { duration: 0.35, ease: "power2.out" });
+    const btnYTo = gsap.quickTo(btn, "y", { duration: 0.35, ease: "power2.out" });
+
+    // ── Character Overlap Collision Engine ──────────────────────────────────
+    let cachedChars = [];
+    let lastCardLeft = null;
+    let lastCardTop = null;
+
+    const measureChars = () => {
+      if (typeof window === "undefined") return;
+      if (window.innerWidth < 992) {
+        const activeNodes = container.querySelectorAll(".caption-char.is-overlapping");
+        activeNodes.forEach((n) => n.classList.remove("is-overlapping"));
+        cachedChars = [];
+        return;
+      }
+
+      const lines = [
+        captionLine1Ref.current,
+        captionLine2Ref.current,
+        captionLine3Ref.current,
+        captionLine4Ref.current,
+      ].filter(Boolean);
+
+      lines.forEach((line) => {
+        const lineRect = line.getBoundingClientRect();
+        line.style.setProperty("--row-w", `${lineRect.width}px`);
+        const charSpans = line.querySelectorAll(".caption-char");
+        charSpans.forEach((span) => {
+          const sRect = span.getBoundingClientRect();
+          const charX = sRect.left - lineRect.left;
+          span.style.setProperty("--char-x", `${charX}px`);
+        });
+      });
+
+      const nodes = container.querySelectorAll(".caption-char");
+      cachedChars = Array.from(nodes).map((node) => {
+        const r = node.getBoundingClientRect();
+        return {
+          node,
+          rect: {
+            left: r.left,
+            right: r.right,
+            top: r.top,
+            bottom: r.bottom,
+          },
+          isOverlapping: node.classList.contains("is-overlapping"),
+        };
+      });
+      lastCardLeft = null;
+      lastCardTop = null;
+      checkCollision();
+    };
+
+    const checkCollision = () => {
+      if (isStoryOpen || window.innerWidth < 992 || cachedChars.length === 0) return;
+      const cardRect = card.getBoundingClientRect();
+
+      // Skip tick if card hasn't moved noticeably
+      if (
+        lastCardLeft !== null &&
+        Math.abs(cardRect.left - lastCardLeft) < 0.25 &&
+        Math.abs(cardRect.top - lastCardTop) < 0.25
+      ) {
+        return;
+      }
+      lastCardLeft = cardRect.left;
+      lastCardTop = cardRect.top;
+
+      const margin = 5; // ~5px closing range threshold requested
+      const left = cardRect.left - margin;
+      const right = cardRect.right + margin;
+      const top = cardRect.top - margin;
+      const bottom = cardRect.bottom + margin;
+      const r = 24 + margin; // card rounded-3xl corner radius (24px) + margin
+
+      for (let i = 0; i < cachedChars.length; i++) {
+        const item = cachedChars[i];
+        const c = item.rect;
+
+        // AABB intersection check with 5px closing range
+        let overlaps =
+          c.right >= left &&
+          c.left <= right &&
+          c.bottom >= top &&
+          c.top <= bottom;
+
+        // Rounded corner quadrant exclusion
+        if (overlaps) {
+          const cx = (c.left + c.right) / 2;
+          const cy = (c.top + c.bottom) / 2;
+          if (cx < left + r && cy < top + r) {
+            overlaps = Math.hypot(cx - (left + r), cy - (top + r)) <= r;
+          } else if (cx > right - r && cy < top + r) {
+            overlaps = Math.hypot(cx - (right - r), cy - (top + r)) <= r;
+          } else if (cx < left + r && cy > bottom - r) {
+            overlaps = Math.hypot(cx - (left + r), cy - (bottom - r)) <= r;
+          } else if (cx > right - r && cy > bottom - r) {
+            overlaps = Math.hypot(cx - (right - r), cy - (bottom - r)) <= r;
+          }
+        }
+
+        if (overlaps !== item.isOverlapping) {
+          item.isOverlapping = overlaps;
+          if (overlaps) {
+            item.node.classList.add("is-overlapping");
+          } else {
+            item.node.classList.remove("is-overlapping");
+          }
+        }
+      }
+    };
+
+    // Initial measurement after layout and font load
+    const rafId = requestAnimationFrame(() => {
+      measureChars();
+    });
+    if (typeof document !== "undefined" && document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(measureChars);
+    }
+
+    window.addEventListener("resize", measureChars);
+    window.addEventListener("scroll", measureChars, { passive: true });
+    gsap.ticker.add(checkCollision);
 
     const handleMouseMove = (e) => {
       if (isStoryOpen || window.innerWidth < 992) return;
-      const rect = container.getBoundingClientRect();
       if (
-        e.clientX < rect.left ||
-        e.clientX > rect.right ||
-        e.clientY < rect.top ||
-        e.clientY > rect.bottom
+        e.clientX < -80 ||
+        e.clientX > window.innerWidth + 80 ||
+        e.clientY < -80 ||
+        e.clientY > window.innerHeight + 80
       ) {
         cardXTo(0);
         cardYTo(0);
-        if (anchorXTo) anchorXTo(0);
-        if (anchorYTo) anchorYTo(0);
         btnXTo(0);
         btnYTo(0);
         return;
       }
 
       // ── 1. Profile Card Repelling Magnetic Effect ──────────────────────────
-      // On moving mouse closer to profile card, it moves AWAY from the mouse
-      const cardRect = card.getBoundingClientRect();
-      const cardCenterX = cardRect.left + cardRect.width / 2;
-      const cardCenterY = cardRect.top + cardRect.height / 2;
-      const diffX = cardCenterX - e.clientX;
-      const diffY = cardCenterY - e.clientY;
-      const distToCard = Math.hypot(diffX, diffY);
+      // Calculate cursor position relative to the exact resting center of the card
+      const cardBaseRect = card.getBoundingClientRect();
+      const currentCardX = gsap.getProperty(card, "x") || 0;
+      const currentCardY = gsap.getProperty(card, "y") || 0;
+      const cardRestingCenterX = cardBaseRect.left + cardBaseRect.width / 2 - currentCardX;
+      const cardRestingCenterY = cardBaseRect.top + cardBaseRect.height / 2 - currentCardY;
 
-      const maxCardDist = 900;
-      if (distToCard < maxCardDist) {
-        const pull = Math.pow((maxCardDist - distToCard) / maxCardDist, 1.1);
-        // Prominent displacement away from mouse: diffX > 0 pushes right (+x)
-        const targetCardX = Math.max(-105, Math.min(105, diffX * 0.25 * pull));
+      const diffX = cardRestingCenterX - e.clientX;
+      const diffY = cardRestingCenterY - e.clientY;
+      const distToCenter = Math.hypot(diffX, diffY);
 
-        // When cursor is below the card center (e.g. over last two caption lines),
-        // give the card a larger upward repulsion perimeter so it moves up further
+      const maxCardDist = 950;
+      if (distToCenter < maxCardDist) {
+        const proximity = (maxCardDist - distToCenter) / maxCardDist;
+        const repelPower = Math.pow(proximity, 0.75);
+
+        // Directional unit vector pointing away from mouse
+        const safeDist = Math.max(1, distToCenter);
+        const dirX = diffX / safeDist;
+        const dirY = diffY / safeDist;
+
+        // Expanded push to completely clear lines 3 & 4 (upward up to -340px, horizontal up to ±320px)
+        const basePushX = 330 * repelPower;
+        const basePushY = 320 * repelPower;
+
+        const targetCardX = Math.max(-320, Math.min(320, dirX * basePushX * 1.15 + diffX * 0.22));
+
         let targetCardY;
         if (diffY < 0) {
-          // Cursor is below the card center -> card moves UP further
-          targetCardY = Math.max(-145, diffY * 0.38 * pull);
+          // Cursor is below card center (e.g. over 'system across' or 'over the experience')
+          // Strong upward propulsion (up to -340px) clears the card completely above lines 3 & 4
+          targetCardY = Math.max(-340, Math.min(0, dirY * basePushY * 1.35 + diffY * 0.35 - 40 * repelPower));
         } else {
-          // Cursor is above the card center -> card moves DOWN
-          targetCardY = Math.min(85, diffY * 0.24 * pull);
+          // Cursor is above card center -> pushes DOWN (up to +250px) to clear lines 1 & 2
+          targetCardY = Math.min(250, Math.max(0, dirY * basePushY * 1.08 + diffY * 0.25));
         }
 
         cardXTo(targetCardX);
         cardYTo(targetCardY);
-        if (anchorXTo) anchorXTo(targetCardX);
-        if (anchorYTo) anchorYTo(targetCardY);
       } else {
         cardXTo(0);
         cardYTo(0);
-        if (anchorXTo) anchorXTo(0);
-        if (anchorYTo) anchorYTo(0);
       }
 
-      // ── 2. Parallax Layer Shift for 'My Story' Button ───────────────────────
-      // Button moves with its own foreground layer dynamic relative to the card
+      // ── 2. Tactile Magnetic Attraction for 'My Story' Button (Clickable CTA) ─
+      // The button DOES NOT repel with the card. It remains stationary in its resting
+      // spot, with a subtle tactile micro-pull (max ±12px) TOWARDS the mouse when close,
+      // making it effortless and intuitive for the end-user to click.
       const btnRect = btn.getBoundingClientRect();
       const btnCenterX = btnRect.left + btnRect.width / 2;
       const btnCenterY = btnRect.top + btnRect.height / 2;
@@ -257,12 +446,12 @@ export const TextGradientFill = () => {
       const btnDiffY = e.clientY - btnCenterY;
       const distToBtn = Math.hypot(btnDiffX, btnDiffY);
 
-      const maxBtnDist = 420;
+      const maxBtnDist = 130;
       if (distToBtn < maxBtnDist) {
-        const btnPull = Math.pow((maxBtnDist - distToBtn) / maxBtnDist, 1.25);
-        // Magnetic pull creates distinct opposite parallax motion across the card
-        const targetBtnX = Math.max(-50, Math.min(50, btnDiffX * 0.45 * btnPull));
-        const targetBtnY = Math.max(-35, Math.min(35, btnDiffY * 0.45 * btnPull));
+        const btnPull = Math.pow((maxBtnDist - distToBtn) / maxBtnDist, 1.15);
+        // Gentle micro-pull towards cursor (making clicking easy and satisfying)
+        const targetBtnX = Math.max(-12, Math.min(12, btnDiffX * 0.22 * btnPull));
+        const targetBtnY = Math.max(-10, Math.min(10, btnDiffY * 0.22 * btnPull));
         btnXTo(targetBtnX);
         btnYTo(targetBtnY);
       } else {
@@ -274,8 +463,6 @@ export const TextGradientFill = () => {
     const handleMouseLeave = () => {
       cardXTo(0);
       cardYTo(0);
-      if (anchorXTo) anchorXTo(0);
-      if (anchorYTo) anchorYTo(0);
       btnXTo(0);
       btnYTo(0);
     };
@@ -284,8 +471,12 @@ export const TextGradientFill = () => {
     container.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", handleMouseMove);
       container.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("resize", measureChars);
+      window.removeEventListener("scroll", measureChars);
+      gsap.ticker.remove(checkCollision);
     };
   }, [isStoryOpen]);
 
@@ -384,7 +575,7 @@ export const TextGradientFill = () => {
             id="my-story-profile-card"
             ref={profileCardRef}
             onClick={openStory}
-            className="relative w-[min(600px,92vw)] h-[min(550px,65vh)] rounded-3xl overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.85)] cursor-pointer shrink-0 bg-brand-dark group pointer-events-auto will-change-transform"
+            className="relative w-[min(600px,92vw)] h-[min(550px,65vh)] rounded-3xl overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.85)] cursor-pointer shrink-0 bg-brand-dark group pointer-events-auto will-change-transform rotate-[-2.5deg]"
             title="Click to view My Story"
           >
             <ScrambleHoverEffect className="w-full h-full" />
@@ -409,7 +600,7 @@ export const TextGradientFill = () => {
               }
               className="caption-fill-row block cursor-pointer pointer-events-auto w-fit select-none will-change-[transform,opacity] pb-0.5 min-[992px]:pb-2 text-center min-[992px]:text-left mx-auto min-[992px]:mx-0 whitespace-normal min-[992px]:whitespace-nowrap"
             >
-              a decade of design instinct.
+              {renderCaptionChars("a decade of design instinct.")}
             </span>
             <span
               ref={captionLine2Ref}
@@ -421,7 +612,7 @@ export const TextGradientFill = () => {
               }
               className="caption-fill-row block cursor-pointer pointer-events-auto w-fit select-none will-change-[transform,opacity] pb-0.5 min-[992px]:pb-2 text-center min-[992px]:text-left mx-auto min-[992px]:mx-0 whitespace-normal min-[992px]:whitespace-nowrap"
             >
-              engineered to feel right.
+              {renderCaptionChars("engineered to feel right.")}
             </span>
             <span
               ref={captionLine3Ref}
@@ -433,7 +624,7 @@ export const TextGradientFill = () => {
               }
               className="caption-fill-row block cursor-pointer pointer-events-auto w-fit select-none will-change-[transform,opacity] pb-0.5 min-[992px]:pb-2 text-center min-[992px]:text-left mx-auto min-[992px]:mx-0 whitespace-normal min-[992px]:whitespace-nowrap"
             >
-              crafting systems across the stack.
+              {renderCaptionChars("crafting systems across the stack.")}
             </span>
             <span
               ref={captionLine4Ref}
@@ -445,21 +636,21 @@ export const TextGradientFill = () => {
               }
               className="caption-fill-row block cursor-pointer pointer-events-auto w-fit select-none will-change-[transform,opacity] pb-0.5 min-[992px]:pb-2 text-center min-[992px]:text-left mx-auto min-[992px]:mx-0 whitespace-normal min-[992px]:whitespace-nowrap"
             >
-              obsessing over the experience in between.
+              {renderCaptionChars("obsessing over the experience in between.")}
             </span>
           </h2>
         </div>
 
         {/* ── Mobile-Only Section (< 992px): Profile Card & 'My Story' Button positioned below caption text ── */}
         <div className="block min-[992px]:hidden w-full flex flex-col items-center justify-center my-5 sm:my-6 pointer-events-none">
-          <div className="relative w-[min(340px,84vw)] h-[210px] sm:w-[400px] sm:h-[260px] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.85)] bg-brand-dark flex items-end justify-center pointer-events-auto">
+          <div className="relative w-[min(340px,84vw)] h-[210px] sm:w-[400px] sm:h-[260px] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.85)] bg-brand-dark flex items-end justify-center pointer-events-auto rotate-[-2deg]">
             <div onClick={openStory} className="absolute inset-0 cursor-pointer">
               <ScrambleHoverEffect className="w-full h-full" />
             </div>
             <div className="relative z-10 mb-3.5 pointer-events-auto">
               <button
                 onClick={openStory}
-                className="group rounded-full px-5 py-2.5 bg-brand-orange text-white font-main font-bold text-xs tracking-wider uppercase cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.35)] flex items-center gap-2 select-none"
+                className="group rounded-full px-5 py-2.5 bg-brand-orange text-white font-main font-bold text-xs tracking-wider uppercase cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.35)] flex items-center gap-2 select-none rotate-[2.5deg]"
               >
                 <span>My story</span>
                 <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">
@@ -481,7 +672,7 @@ export const TextGradientFill = () => {
                 id="my-story-btn"
                 ref={myStoryBtnRef}
                 onClick={openStory}
-                className="group rounded-full px-7 py-3.5 bg-brand-orange text-white font-main font-bold text-xs sm:text-sm tracking-widest uppercase cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex items-center gap-2.5 shrink-0 select-none pointer-events-auto whitespace-nowrap will-change-transform"
+                className="group rounded-full px-7 py-3.5 bg-brand-orange text-white font-main font-bold text-xs sm:text-sm tracking-widest uppercase cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.35)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex items-center gap-2.5 shrink-0 select-none pointer-events-auto whitespace-nowrap will-change-transform rotate-[3.5deg]"
               >
                 <span>My story</span>
                 <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/20 flex items-center justify-center text-xs group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200">
